@@ -7,7 +7,7 @@ import (
 	"fmt"
 )
 
-var templates = template.Must(template.ParseFiles("static/welcome.html", "static/upload.html"))
+var templates = template.Must(template.ParseFiles("../../static/welcome.html", "../../static/upload.html"))
 
 type Page struct {
 	Title string
