@@ -14,13 +14,13 @@ type Page struct {
 	Body  []byte
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
+func homeHandler(w http.ResponseWriter, r *http.Request) {
 	p := &Page{Title: "Welcome"}
 	renderTemplate(w, "welcome.html", p)
 }
 
 func main() {
-	http.HandleFunc("/", handler)
+	http.HandleFunc("/", homeHandler)
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
