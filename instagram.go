@@ -6,7 +6,6 @@ import (
 
 // simple wrapper for Instagram REST API
 type ImageSource interface {
-
 	Search(s string) []string
 }
 
@@ -20,10 +19,6 @@ func NewInstagramImageSource(clientID string) *InstagramImageSource {
 }
 
 func (i *InstagramImageSource) Search(s string) ([]string, error) {
-	// curl 'https://api.instagram.com/v1/tags/SEARCH-TAG/media/recent?client_id=CLIENT-ID&callback=YOUR-CALLBACK'
-	// TODO: check string for chats that need to be escaped
-
-
 	u, err := i.instagramAPIUrl(s)
 	if err != nil {
 		return nil, err
