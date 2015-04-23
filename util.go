@@ -5,20 +5,15 @@ import (
 )
 
 var (
-    dotRegexp *regexp.Regexp
-    slashRegexp *regexp.Regexp
+    prohibited *regexp.Regexp
 )
 
 
 func init() {
     var err error
 
-    dotRegexp, err = regexp.Compile("\\.\\.")
-    if err != nil {
-        panic(err)
-    }
-
-    slashRegexp, err = regexp.Compile("/")
+    // disallow ".." and "/" strings to appear in the search term
+    prohibited, err = regexp.Compile("\\.\\.|/")
     if err != nil {
         panic(err)
     }
@@ -26,8 +21,7 @@ func init() {
 
 // UrlEncode encodes a string like Javascript's encodeURIComponent(), but also strips slashes and ".."
 func UrlEncode(s string) (string, error) {
-    s = dotRegexp.ReplaceAllString(s, "")
-    s = slashRegexp.ReplaceAllString(s, "")
+    s = prohibited.ReplaceAllString(s, "")
 
     u, err := url.Parse(s)
     if err != nil {
