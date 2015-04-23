@@ -2,11 +2,28 @@ package gochallenge3
 import (
 	"net/http"
 	"net/url"
+	"io/ioutil"
 )
 
 // simple wrapper for Instagram REST API
 type ImageSource interface {
 	Search(s string) []string
+}
+
+type Image struct {
+	Url   string `json:url`
+	Width int32  `json:width`
+	Height int32 `json:height`
+}
+
+type InstagramJSON struct {
+	Data []struct {
+		Images struct {
+			LowRes   Image `json:low_resolution`
+			Thumb    Image `json:thumbnail`
+			Standard Image `json:standard_resolution`
+		} `json:images`
+	} `json:"data"`
 }
 
 
@@ -35,9 +52,14 @@ func (i *InstagramImageSource) Search(s string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
-	// TODO: do something with resp
-	if resp == nil {
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if body == nil {
 		panic("oops")
 	}
 
