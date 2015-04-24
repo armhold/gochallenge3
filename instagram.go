@@ -28,13 +28,15 @@ type InstagramImage struct {
 	Height int32   `json:"height"`
 }
 
+type InstagramImageSet struct {
+	LowRes      InstagramImage `json:"low_resolution"`
+	Thumb       InstagramImage `json:"thumbnail"`
+	StandardRes InstagramImage `json:"standard_resolution"`
+}
+
 type InstagramData struct {
 	Tags []string                  `json:"tags"`
-	Images struct {
-		LowRes      InstagramImage `json:"low_resolution"`
-		Thumb       InstagramImage `json:"thumbnail"`
-		StandardRes InstagramImage `json:"standard_resolution"`
-	}
+	ImageSet InstagramImageSet     `json:"images"`
 }
 
 type InstagramJSON struct {
