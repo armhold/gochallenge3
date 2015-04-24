@@ -10,7 +10,7 @@ import (
 
 // simple wrapper for Instagram REST API
 type ImageSource interface {
-	Search(s string) []InstagramImageSet
+	Search(s string) ([]InstagramImageSet, error)
 }
 
 type InstagramImageSource struct {
@@ -28,7 +28,6 @@ func (i *InstagramImageSource) Search(s string) ([]InstagramImageSet, error) {
 	}
 
 	req, err := http.NewRequest("GET", u, nil)
-	fmt.Printf("using URL: %v\n", u)
 	if err != nil {
 		return nil, err
 	}
@@ -77,6 +76,7 @@ func (i *InstagramImageSource) instagramAPIUrl(searchTag string) (string, error)
 	}
 
 	u.Path += "/" + searchTag
+	u.Path += "/media/recent"
 	parameters := url.Values{}
 	parameters.Add("client_id", i.clientID)
 	u.RawQuery = parameters.Encode()

@@ -9,7 +9,7 @@ func TestUrl(t *testing.T) {
 
 	searchTerm := "dogs"
 	got, err := i.instagramAPIUrl(searchTerm)
-	want := "https://api.instagram.com/v1/tags/dogs?client_id=client123"
+	want := "https://api.instagram.com/v1/tags/dogs/media/recent?client_id=client123"
 
 	if err != nil {
 		t.Fatal(err)

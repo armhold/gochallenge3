@@ -7,20 +7,12 @@ import (
 	"os"
 	"github.com/armhold/gochallenge3"
 	"log"
+	"github.com/juju/errgo/errors"
 )
 
 var (
 	templates = template.Must(template.ParseFiles("../../static/welcome.html", "../../static/upload.html", "../../static/search.html"))
-	instagramClientID string
 )
-
-
-func init() {
-	instagramClientID := os.Getenv("INSTAGRAM_CLIENT_ID")
-	if instagramClientID == "" {
-		panic("environment variable INSTAGRAM_CLIENT_ID not set")
-	}
-}
 
 type Page struct {
 	Title string
@@ -34,26 +26,39 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, "welcome.html", p)
 }
 
-func searchHandler(w http.ResponseWriter, r *http.Request) {
 
-	p := &Page{Title: "Search Results"}
+func searchHandler(imageSource gochallenge3.ImageSource) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		p := &Page{Title: "Search Results"}
 
-	instagramClient := gochallenge3.NewInstagramImageSource(instagramClientID)
-	imageSets, err := instagramClient.Search("dogs")
-	if err != nil {
-		log.Printf("error searching for images: %v\n", err)
-		p.Error = err
-	} else {
-		p.SearchResults = imageSets
-	}
+		searchTerm := r.FormValue("search_term")
+		if searchTerm == "" {
+			p.Error = errors.New("search_term required")
+			// TODO: support multiple errors in p.Error
+		} else {
+			imageSets, err := imageSource.Search(searchTerm)
+			if err != nil {
+				log.Printf("error searching for images: %v\n", err)
+				p.Error = err
+			} else {
+				p.SearchResults = imageSets
+			}
+		}
 
-	renderTemplate(w, "search.html", p)
+		renderTemplate(w, "search.html", p)
+	})
 }
 
 func main() {
 	http.HandleFunc("/", homeHandler)
-	http.HandleFunc("/search", searchHandler)
 
+	instagramClientID := os.Getenv("INSTAGRAM_CLIENT_ID")
+	if instagramClientID == "" {
+		panic("environment variable INSTAGRAM_CLIENT_ID not set")
+	}
+	imageSource := gochallenge3.NewInstagramImageSource(instagramClientID)
+
+    http.HandleFunc("/search", searchHandler(imageSource))
 
 	port := os.Getenv("PORT")
 	if port == "" {
