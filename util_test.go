@@ -1,33 +1,33 @@
 package gochallenge3
 
 import (
-    "testing"
+	"testing"
 )
 
 func TestUrlEncodeSpaces(t *testing.T) {
-    input := "foo bar"
-    got, err := UrlEncode(input)
-    want := "foo%20bar"
+	input := "foo bar"
+	got, err := UrlEncode(input)
+	want := "foo%20bar"
 
-    if err != nil {
-        t.Fatal(err)
-    }
+	if err != nil {
+		t.Fatal(err)
+	}
 
-    if got != want {
-        t.Errorf("UrlEncoded(%q) => %q, want %q", input, got, want)
-    }
+	if got != want {
+		t.Errorf("UrlEncoded(%q) => %q, want %q", input, got, want)
+	}
 }
 
 func TestUrlEncodeDotsAndSlashes(t *testing.T) {
-    input := "foo/../etc/password"
-    got, err := UrlEncode(input)
-    want := "fooetcpassword"
+	input := "foo/../etc/password"
+	got, err := UrlEncode(input)
+	want := "fooetcpassword"
 
-    if err != nil {
-        t.Fatal(err)
-    }
+	if err != nil {
+		t.Fatal(err)
+	}
 
-    if got != want {
-        t.Errorf("UrlEncoded(%q) => %q, want %q", input, got, want)
-    }
+	if got != want {
+		t.Errorf("UrlEncoded(%q) => %q, want %q", input, got, want)
+	}
 }

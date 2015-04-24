@@ -1,10 +1,10 @@
 package main
 
 import (
-	"net/http"
-	"html/template"
-	"os"
 	"fmt"
+	"html/template"
+	"net/http"
+	"os"
 )
 
 var templates = template.Must(template.ParseFiles("../../static/welcome.html", "../../static/upload.html"))
@@ -26,7 +26,7 @@ func main() {
 		port = "8080"
 	}
 	fmt.Printf("using port: %s\n", port)
-	http.ListenAndServe(":" + port, nil)
+	http.ListenAndServe(":"+port, nil)
 }
 
 func renderTemplate(w http.ResponseWriter, templatePath string, p *Page) {

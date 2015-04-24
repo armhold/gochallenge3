@@ -1,16 +1,15 @@
 package gochallenge3
 
 import (
+	"io/ioutil"
 	"net/http"
 	"net/url"
-	"io/ioutil"
 )
 
 // simple wrapper for Instagram REST API
 type ImageSource interface {
 	Search(s string) []string
 }
-
 
 type InstagramImageSource struct {
 	clientID string

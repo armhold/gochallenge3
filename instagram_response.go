@@ -1,16 +1,17 @@
 package gochallenge3
+
 import "encoding/json"
 
-type InstagramPagination  struct {
-	MaxTagID    string `json:"max_tag_id"`
-	MinTagID    string `json:"min_tag_id"`
-	NextURL     string `json:"next_url"`
+type InstagramPagination struct {
+	MaxTagID string `json:"max_tag_id"`
+	MinTagID string `json:"min_tag_id"`
+	NextURL  string `json:"next_url"`
 }
 
 type InstagramImage struct {
-	Url    string  `json:"url"`
-	Width  int32   `json:"width"`
-	Height int32   `json:"height"`
+	Url    string `json:"url"`
+	Width  int32  `json:"width"`
+	Height int32  `json:"height"`
 }
 
 type InstagramImageSet struct {
@@ -20,15 +21,14 @@ type InstagramImageSet struct {
 }
 
 type InstagramData struct {
-	Tags []string                  `json:"tags"`
-	ImageSet InstagramImageSet     `json:"images"`
+	Tags     []string          `json:"tags"`
+	ImageSet InstagramImageSet `json:"images"`
 }
 
 type InstagramResponse struct {
 	Pagination InstagramPagination `json:"pagination"`
 	Data       []InstagramData     `json:"data"`
 }
-
 
 func ParseInstagramJSON(jsonBytes []byte) (InstagramResponse, error) {
 	var result InstagramResponse
