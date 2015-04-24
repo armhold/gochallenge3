@@ -16,6 +16,34 @@ type InstagramImageSource struct {
 	clientID string
 }
 
+type InstagramPagination  struct {
+	MaxTagID    string `json:"max_tag_id"`
+	MinTagID    string `json:"min_tag_id"`
+	NextURL     string `json:"next_url"`
+}
+
+type InstagramImage struct {
+	Url    string  `json:"url"`
+	Width  int32   `json:"width"`
+	Height int32   `json:"height"`
+}
+
+type InstagramData struct {
+	Tags []string                  `json:"tags"`
+	Images struct {
+		LowRes      InstagramImage `json:"low_resolution"`
+		Thumb       InstagramImage `json:"thumbnail"`
+		StandardRes InstagramImage `json:"standard_resolution"`
+	}
+}
+
+type InstagramJSON struct {
+	Pagination InstagramPagination `json:"pagination"`
+	Data       []InstagramData     `json:"data"`
+}
+
+
+
 func NewInstagramImageSource(clientID string) *InstagramImageSource {
 	return &InstagramImageSource{clientID: clientID}
 }
@@ -71,9 +99,9 @@ func (i *InstagramImageSource) instagramAPIUrl(searchTag string) (string, error)
 	return u.String(), nil
 }
 
-func (i *InstagramImageSource) parseJSON(jsonString string) (map[string]interface{}, error) {
-	var result map[string]interface{}
+func (i *InstagramImageSource) parseJSON(jsonBytes []byte) (InstagramJSON, error) {
+	var result InstagramJSON
 
-	err := json.Unmarshal([]byte(jsonString), &result)
+	err := json.Unmarshal(jsonBytes, &result)
 	return result, err
 }
