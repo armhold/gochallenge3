@@ -3,27 +3,12 @@ import (
 	"net/http"
 	"net/url"
 	"io/ioutil"
+	"encoding/json"
 )
 
 // simple wrapper for Instagram REST API
 type ImageSource interface {
 	Search(s string) []string
-}
-
-type Image struct {
-	Url   string `json:url`
-	Width int32  `json:width`
-	Height int32 `json:height`
-}
-
-type InstagramJSON struct {
-	Data []struct {
-		Images struct {
-			LowRes   Image `json:low_resolution`
-			Thumb    Image `json:thumbnail`
-			Standard Image `json:standard_resolution`
-		} `json:images`
-	} `json:"data"`
 }
 
 
@@ -84,4 +69,11 @@ func (i *InstagramImageSource) instagramAPIUrl(searchTag string) (string, error)
 	u.RawQuery = parameters.Encode()
 
 	return u.String(), nil
+}
+
+func (i *InstagramImageSource) parseJSON(jsonString string) (map[string]interface{}, error) {
+	var result map[string]interface{}
+
+	err := json.Unmarshal([]byte(jsonString), &result)
+	return result, err
 }
