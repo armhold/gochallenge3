@@ -8,7 +8,7 @@ import (
 
 // simple wrapper for Instagram REST API
 type ImageSource interface {
-	Search(s string) []string
+	Search(s string) []InstagramImageSet
 }
 
 type InstagramImageSource struct {
@@ -19,7 +19,7 @@ func NewInstagramImageSource(clientID string) *InstagramImageSource {
 	return &InstagramImageSource{clientID: clientID}
 }
 
-func (i *InstagramImageSource) Search(s string) ([]string, error) {
+func (i *InstagramImageSource) Search(s string) ([]InstagramImageSet, error) {
 	u, err := i.instagramAPIUrl(s)
 	if err != nil {
 		return nil, err
@@ -42,11 +42,18 @@ func (i *InstagramImageSource) Search(s string) ([]string, error) {
 		return nil, err
 	}
 
-	if body == nil {
-		panic("oops")
+	got, err := ParseInstagramJSON([]byte(body))
+
+	if err != nil {
+		return nil, err
 	}
 
-	var result []string
+	var result []InstagramImageSet
+
+	for _, datum := range got.Data {
+		result = append(result, datum.ImageSet)
+	}
+
 	return result, nil
 }
 
