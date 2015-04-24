@@ -10,13 +10,6 @@
 
     <h1>{{.Title}}</h1>
 
-    <ul>
-        {{range .SearchResults}}
-        <li><img src="{{.Thumb.Url}}"></li>
-        {{end}}
-    </ul>
-
-
     {{if .Error}}
     <h3>Error: {{.Error}}</h3>
     {{end}}
@@ -31,6 +24,12 @@
         <input type="submit" value="Search">
 
     </form>
+
+    <ul>
+        {{range .SearchResults}}
+        <li><img src="{{.Thumb.Url}}"></li>
+        {{end}}
+    </ul>
 
 
 </div>
