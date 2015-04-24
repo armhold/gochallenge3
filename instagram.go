@@ -1,9 +1,9 @@
 package gochallenge3
+
 import (
 	"net/http"
 	"net/url"
 	"io/ioutil"
-	"encoding/json"
 )
 
 // simple wrapper for Instagram REST API
@@ -15,36 +15,6 @@ type ImageSource interface {
 type InstagramImageSource struct {
 	clientID string
 }
-
-type InstagramPagination  struct {
-	MaxTagID    string `json:"max_tag_id"`
-	MinTagID    string `json:"min_tag_id"`
-	NextURL     string `json:"next_url"`
-}
-
-type InstagramImage struct {
-	Url    string  `json:"url"`
-	Width  int32   `json:"width"`
-	Height int32   `json:"height"`
-}
-
-type InstagramImageSet struct {
-	LowRes      InstagramImage `json:"low_resolution"`
-	Thumb       InstagramImage `json:"thumbnail"`
-	StandardRes InstagramImage `json:"standard_resolution"`
-}
-
-type InstagramData struct {
-	Tags []string                  `json:"tags"`
-	ImageSet InstagramImageSet     `json:"images"`
-}
-
-type InstagramJSON struct {
-	Pagination InstagramPagination `json:"pagination"`
-	Data       []InstagramData     `json:"data"`
-}
-
-
 
 func NewInstagramImageSource(clientID string) *InstagramImageSource {
 	return &InstagramImageSource{clientID: clientID}
@@ -61,7 +31,6 @@ func (i *InstagramImageSource) Search(s string) ([]string, error) {
 		return nil, err
 	}
 
-	// Send the request via a client
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -99,11 +68,4 @@ func (i *InstagramImageSource) instagramAPIUrl(searchTag string) (string, error)
 	u.RawQuery = parameters.Encode()
 
 	return u.String(), nil
-}
-
-func (i *InstagramImageSource) parseJSON(jsonBytes []byte) (InstagramJSON, error) {
-	var result InstagramJSON
-
-	err := json.Unmarshal(jsonBytes, &result)
-	return result, err
 }
