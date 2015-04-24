@@ -10,6 +10,10 @@
 
     <h1>{{.Title}}</h1>
 
+    <h3>search results: {{.SearchResults}}</h3>
+    {{if .Error}}
+    <h3>Error: {{.Error}}</h3>
+    {{end}}
 
     <form action="/search">
         <label>Enter a search term:

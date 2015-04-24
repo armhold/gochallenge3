@@ -4,6 +4,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"fmt"
+	"errors"
 )
 
 // simple wrapper for Instagram REST API
@@ -26,6 +28,7 @@ func (i *InstagramImageSource) Search(s string) ([]InstagramImageSet, error) {
 	}
 
 	req, err := http.NewRequest("GET", u, nil)
+	fmt.Printf("using URL: %v\n", u)
 	if err != nil {
 		return nil, err
 	}
@@ -36,6 +39,11 @@ func (i *InstagramImageSource) Search(s string) ([]InstagramImageSet, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
+
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.New(fmt.Sprintf("image fetch failed: %v", resp.StatusCode))
+	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
