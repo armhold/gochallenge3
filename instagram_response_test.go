@@ -20,7 +20,7 @@ func TestParseInstagramJSON(t *testing.T) {
 	wantPagination := InstagramPagination{MinTagID: "969806771123671476", NextURL: "https://api.instagram.com/v1/tags/dogs/media/recent?callback=YOUR-CALLBACK\u0026client_id=client123\u0026max_tag_id=969806141804481738"}
 
 	if got.Pagination != wantPagination {
-		t.Fatal("Pagination => %q, want %q", got.Pagination, wantPagination)
+		t.Fatalf("Pagination => %q, want %q", got.Pagination, wantPagination)
 	}
 
 	wantFirstImageSet := InstagramImageSet{
@@ -30,6 +30,6 @@ func TestParseInstagramJSON(t *testing.T) {
 	}
 
 	if got.Data[0].ImageSet != wantFirstImageSet {
-		t.Fatal("ImageSet => %q, want %q", got.Data[0].ImageSet, wantFirstImageSet)
+		t.Fatalf("ImageSet => %q, want %q", got.Data[0].ImageSet, wantFirstImageSet)
 	}
 }
