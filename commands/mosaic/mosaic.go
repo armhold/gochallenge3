@@ -7,11 +7,11 @@ import (
 	"os"
 	"github.com/armhold/gochallenge3"
 	"log"
-	"github.com/juju/errgo/errors"
+	"errors"
 )
 
 var (
-	templates = template.Must(template.ParseGlob("../../templates/*.html"))
+	templates map[string]*template.Template
 )
 
 type Page struct {
@@ -24,6 +24,13 @@ type Page struct {
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	p := &Page{Title: "Welcome"}
 	renderTemplate(w, "welcome.html", p)
+}
+
+func init() {
+	templates = make(map[string]*template.Template)
+	templates["welcome.html"] = template.Must(template.ParseFiles("../../templates/welcome.html", "../../templates/layout.html"))
+	templates["search.html"]  = template.Must(template.ParseFiles("../../templates/search.html", "../../templates/layout.html"))
+	fmt.Printf("templates inited\n")
 }
 
 
@@ -51,6 +58,7 @@ func searchHandler(imageSource gochallenge3.ImageSource) http.HandlerFunc {
 
 func main() {
 	http.HandleFunc("/", homeHandler)
+	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("../../public"))))
 
 	instagramClientID := os.Getenv("INSTAGRAM_CLIENT_ID")
 	if instagramClientID == "" {
@@ -69,7 +77,7 @@ func main() {
 }
 
 func renderTemplate(w http.ResponseWriter, templatePath string, p *Page) {
-	err := templates.ExecuteTemplate(w, templatePath, p)
+	err := templates[templatePath].ExecuteTemplate(w, "layout", p)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
