@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"fmt"
 	"errors"
+	"log"
 )
 
 // simple wrapper for Instagram REST API
@@ -22,6 +23,7 @@ func NewInstagramImageSource(clientID string) *InstagramImageSource {
 }
 
 func (i *InstagramImageSource) Search(s string) ([]InstagramImageSet, error) {
+	log.Println("starting search...")
 	u, err := i.instagramAPIUrl(s)
 	if err != nil {
 		return nil, err
@@ -60,6 +62,8 @@ func (i *InstagramImageSource) Search(s string) ([]InstagramImageSet, error) {
 	for _, datum := range got.Data {
 		result = append(result, datum.ImageSet)
 	}
+
+	log.Println("search complete.	")
 
 	return result, nil
 }

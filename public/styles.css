@@ -1,3 +1,11 @@
 html {
     background-color: antiquewhite;
 }
+
+div.b-blue {
+    border: 1px solid blue;
+}
+
+div.b-red {
+    border: 1px solid red;
+}
