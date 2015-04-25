@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	templates = template.Must(template.ParseFiles("../../static/welcome.html", "../../static/upload.html", "../../static/search.html"))
+	templates = template.Must(template.ParseGlob("../../templates/*.html"))
 )
 
 type Page struct {
