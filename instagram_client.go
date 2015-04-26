@@ -1,12 +1,12 @@
 package gochallenge3
 
 import (
+	"errors"
+	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
-	"fmt"
-	"errors"
-	"log"
 )
 
 // simple wrapper for Instagram REST API
@@ -40,7 +40,6 @@ func (i *InstagramImageSource) Search(s string) ([]InstagramImageSet, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, errors.New(fmt.Sprintf("image fetch failed: %v", resp.StatusCode))

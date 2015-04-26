@@ -1,13 +1,13 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"github.com/armhold/gochallenge3"
 	"html/template"
+	"log"
 	"net/http"
 	"os"
-	"github.com/armhold/gochallenge3"
-	"log"
-	"errors"
 )
 
 var (
@@ -16,10 +16,10 @@ var (
 
 type Page struct {
 	Title string
-//	SearchResults []gochallenge3.InstagramImageSet
+	//	SearchResults []gochallenge3.InstagramImageSet
 	SearchResultRows [][]gochallenge3.InstagramImageSet
-	Error error
-	Body  []byte
+	Error            error
+	Body             []byte
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
@@ -30,10 +30,9 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 func init() {
 	templates = make(map[string]*template.Template)
 	templates["welcome.html"] = template.Must(template.ParseFiles("../../templates/welcome.html", "../../templates/layout.html"))
-	templates["search.html"]  = template.Must(template.ParseFiles("../../templates/search.html", "../../templates/layout.html"))
+	templates["search.html"] = template.Must(template.ParseFiles("../../templates/search.html", "../../templates/layout.html"))
 	fmt.Printf("templates inited\n")
 }
-
 
 func searchHandler(imageSource gochallenge3.ImageSource) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -68,7 +67,7 @@ func main() {
 	}
 	imageSource := gochallenge3.NewInstagramImageSource(instagramClientID)
 
-    http.HandleFunc("/search", searchHandler(imageSource))
+	http.HandleFunc("/search", searchHandler(imageSource))
 
 	port := os.Getenv("PORT")
 	if port == "" {

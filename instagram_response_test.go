@@ -37,7 +37,7 @@ func TestParseInstagramJSON(t *testing.T) {
 func TestByRows(t *testing.T) {
 	imageSets := make([]InstagramImageSet, 19)
 
-	for i, _ :=  range imageSets {
+	for i, _ := range imageSets {
 		imageSets[i] = InstagramImageSet{}
 	}
 
@@ -47,9 +47,8 @@ func TestByRows(t *testing.T) {
 		t.Errorf("expected 4 rows, got %d", len(rows))
 	}
 
-
-	expect := func (s []InstagramImageSet, expectedLen int) {
-		if (len(s) != expectedLen) {
+	expect := func(s []InstagramImageSet, expectedLen int) {
+		if len(s) != expectedLen {
 			t.Errorf("expected %d cols, got %d", expectedLen, len(rows))
 		}
 	}
