@@ -30,7 +30,6 @@ func init() {
 	templates = make(map[string]*template.Template)
 	templates["welcome.html"] = template.Must(template.ParseFiles("../../templates/welcome.html", "../../templates/layout.html"))
 	templates["search.html"] = template.Must(template.ParseFiles("../../templates/search.html", "../../templates/layout.html"))
-	gochallenge3.CommonLog.Printf("templates inited\n")
 }
 
 func searchHandler(imageSource gochallenge3.ImageSource) http.HandlerFunc {
@@ -46,7 +45,15 @@ func searchHandler(imageSource gochallenge3.ImageSource) http.HandlerFunc {
 
 			urls := make([]string, len(imageSets))
 			for _, imageSet := range imageSets {
-				urls = append(urls, imageSet.Thumb.Url)
+				gochallenge3.CommonLog.Printf("processing thumbnail: %s", imageSet.Thumb.Url)
+
+				if imageSet.Thumb.Url == "" {
+					gochallenge3.CommonLog.Printf("skipping thumbnail: %v", imageSet)
+				} else {
+					gochallenge3.CommonLog.Printf("including thumbnail: %v", imageSet.Thumb.Url)
+
+					urls = append(urls, imageSet.Thumb.Url)
+				}
 			}
 			filePaths, err := gochallenge3.Download(urls)
 			for filePath := range filePaths {

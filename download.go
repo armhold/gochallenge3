@@ -17,19 +17,21 @@ func Download(urls []string) ([]string, error) {
     CommonLog.Printf("created tempDir: %s\n", tmpDir)
 
     var filePaths = make([]string, len(urls))
+    CommonLog.Printf("download urls => %v", urls)
 
     for i, url := range urls {
+        CommonLog.Printf("download [%d] => \"%s\"", i, url)
         response, err := http.Get(url)
         if err != nil {
-
-            return nil, fmt.Errorf("error while downloading", url, "-", err)
+            return nil, fmt.Errorf("error while downloading %s: %s", url, err)
         }
         defer response.Body.Close()
 
-        fileName := fmt.Sprintf("%s/thumb.%d", tmpDir, i)
-        output, err := os.Create(fileName)
+        filePaths[i] = fmt.Sprintf("%s/thumb.%d", tmpDir, i)
+
+        output, err := os.Create(filePaths[i])
         if err != nil {
-            return nil, fmt.Errorf("error while creating", fileName, "-", err)
+            return nil, fmt.Errorf("error while creating %s: %s", filePaths[i], err)
         }
         defer output.Close()
 
@@ -38,7 +40,7 @@ func Download(urls []string) ([]string, error) {
             return nil, fmt.Errorf("error while downloading", url, "-", err)
         }
 
-        CommonLog.Printf("downloaded %s to %s\n", url, fileName)
+        CommonLog.Printf("downloaded %s to %s\n", url, filePaths[i])
     }
 
 
