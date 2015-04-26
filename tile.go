@@ -30,12 +30,12 @@ func NewTile(filePath string, r image.Rectangle) (*Tile, error) {
     }
 
     scaledImg := Scale(srcImg, r)
-    avgColor := computeAverageColor(scaledImg)
+    avgColor := ComputeAverageColor(scaledImg)
 
     return &Tile{ScaledImage: scaledImg, AverageColor: avgColor}, nil
 }
 
-func computeAverageColor(img image.Image) color.Color {
+func ComputeAverageColor(img image.Image) color.Color {
     sumR := uint32(0)
     sumG := uint32(0)
     sumB := uint32(0)

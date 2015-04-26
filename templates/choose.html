@@ -1,0 +1,21 @@
+{{ define "content" }}
+<div>
+
+    <h2 class="sub-header">Choose Image to Upload</h2>
+
+    <div class="table-responsive">
+
+        <div>
+            <form class="form-inline" action="/upload" method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="file">Filename:</label>
+                    <input type="file" name="file" id="file">
+                </div>
+                <button type="submit" class="btn btn-default" autofocus>Submit</button>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+{{ end }}

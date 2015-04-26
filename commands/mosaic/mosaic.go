@@ -7,6 +7,8 @@ import (
 	"html/template"
 	"net/http"
 	"os"
+	"io"
+	"io/ioutil"
 )
 
 var (
@@ -29,7 +31,8 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 func init() {
 	templates = make(map[string]*template.Template)
 	templates["welcome.html"] = template.Must(template.ParseFiles("../../templates/welcome.html", "../../templates/layout.html"))
-	templates["search.html"] = template.Must(template.ParseFiles("../../templates/search.html", "../../templates/layout.html"))
+	templates["search.html"]  = template.Must(template.ParseFiles("../../templates/search.html", "../../templates/layout.html"))
+	templates["choose.html"]  = template.Must(template.ParseFiles("../../templates/choose.html", "../../templates/layout.html"))
 }
 
 func searchHandler(imageSource gochallenge3.ImageSource) http.HandlerFunc {
@@ -66,6 +69,50 @@ func searchHandler(imageSource gochallenge3.ImageSource) http.HandlerFunc {
 	})
 }
 
+func chooseFileHandler(w http.ResponseWriter, r *http.Request) {
+	p := &Page{Title: "Image Upload"}
+	renderTemplate(w, "choose.html", p)
+}
+
+func uploadHandler(w http.ResponseWriter, r *http.Request) {
+	p := &Page{Title: "Receive Upload"}
+
+	file, err := receiveUploadFile(r)
+
+	if err != nil {
+		gochallenge3.CommonLog.Println(err)
+		p.Error = err
+		renderTemplate(w, "upload.html", p)
+	} else {
+		gochallenge3.CommonLog.Println("Image successfully uploaded to %s", file.Name())
+		renderTemplate(w, "search.html", p)
+	}
+}
+
+func receiveUploadFile(r *http.Request) (*os.File, error) {
+	file, _, err := r.FormFile("file")
+
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	out, err := ioutil.TempFile("", "image_upload")
+	if err != nil {
+		return nil, err
+	}
+	defer out.Close()
+
+	_, err = io.Copy(out, file)
+	if err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+
+
 func main() {
 	http.HandleFunc("/", homeHandler)
 	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("../../public"))))
@@ -77,6 +124,9 @@ func main() {
 	imageSource := gochallenge3.NewInstagramImageSource(instagramClientID)
 
 	http.HandleFunc("/search", searchHandler(imageSource))
+	http.HandleFunc("/upload", uploadHandler)
+	http.HandleFunc("/choose", chooseFileHandler)
+
 
 	port := os.Getenv("PORT")
 	if port == "" {
