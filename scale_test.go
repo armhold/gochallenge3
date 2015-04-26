@@ -13,7 +13,7 @@ func TestScale(t *testing.T) {
 	expectW := 800
 	expectH := 600
 
-	err := Scale(srcPath, dstPath, image.Rect(0, 0, expectW, expectH))
+	err := ScaleToFile(srcPath, dstPath, image.Rect(0, 0, expectW, expectH))
 	if err != nil {
 		t.Fatal(err)
 	}

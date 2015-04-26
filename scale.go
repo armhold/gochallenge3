@@ -9,18 +9,7 @@ import (
 )
 
 // Scale scales the src image to the given rectangle using Nearest Neighbor
-func Scale(srcPath, dstPath string, r image.Rectangle) error {
-	srcFile, err := os.Open(srcPath)
-	if err != nil {
-		return err
-	}
-	defer srcFile.Close()
-
-	srcImg, _, err := image.Decode(srcFile)
-	if err != nil {
-		return err
-	}
-
+func Scale(srcImg image.Image, r image.Rectangle) image.Image {
 	dstImg := image.NewRGBA(r)
 
 	srcBounds := srcImg.Bounds()
@@ -43,12 +32,29 @@ func Scale(srcPath, dstPath string, r image.Rectangle) error {
 		}
 	}
 
-	toFile, err := os.Create(dstPath)
-	if err != nil {
-		return err
-	}
+    return dstImg
+}
 
-	defer toFile.Close()
+func ScaleToFile(srcPath, dstPath string, r image.Rectangle) error {
+    srcFile, err := os.Open(srcPath)
+    if err != nil {
+        return err
+    }
+    defer srcFile.Close()
 
-	return png.Encode(toFile, dstImg)
+    srcImg, _, err := image.Decode(srcFile)
+    if err != nil {
+        return err
+    }
+
+    toFile, err := os.Create(dstPath)
+    if err != nil {
+        return err
+    }
+
+    defer toFile.Close()
+
+    dstImg := Scale(srcImg, r)
+
+    return png.Encode(toFile, dstImg)
 }
