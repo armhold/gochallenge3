@@ -11,7 +11,10 @@ func TestScale(t *testing.T) {
     srcPath := "./sunrise.jpg"
     dstPath := "sunrise-scaled.png"
 
-    err := Scale(srcPath, dstPath, image.Rect(0, 0, 800, 600))
+    expectW := 800
+    expectH := 600
+
+    err := Scale(srcPath, dstPath, image.Rect(0, 0, expectW, expectH))
     if err != nil {
         t.Fatal(err)
     }
@@ -31,12 +34,12 @@ func TestScale(t *testing.T) {
     w := bounds.Max.X - bounds.Min.X
     h := bounds.Max.Y - bounds.Min.Y
 
-    if w != 800 {
-        t.Errorf("expected width %d, got %d", 800, w)
+    if w != expectW {
+        t.Errorf("expected width %d, got %d", expectW, w)
     }
 
-    if h != 600 {
-        t.Errorf("expected width %d, got %d", 600, h)
+    if h != expectH {
+        t.Errorf("expected width %d, got %d", expectH, h)
     }
 
     os.Remove(dstPath)
