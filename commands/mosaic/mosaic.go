@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/armhold/gochallenge3"
 	"html/template"
-	"log"
 	"net/http"
 	"os"
 )
@@ -31,7 +30,7 @@ func init() {
 	templates = make(map[string]*template.Template)
 	templates["welcome.html"] = template.Must(template.ParseFiles("../../templates/welcome.html", "../../templates/layout.html"))
 	templates["search.html"] = template.Must(template.ParseFiles("../../templates/search.html", "../../templates/layout.html"))
-	fmt.Printf("templates inited\n")
+	gochallenge3.CommonLog.Printf("templates inited\n")
 }
 
 func searchHandler(imageSource gochallenge3.ImageSource) http.HandlerFunc {
@@ -45,8 +44,17 @@ func searchHandler(imageSource gochallenge3.ImageSource) http.HandlerFunc {
 		} else {
 			imageSets, err := imageSource.Search(searchTerm)
 
+			urls := make([]string, len(imageSets))
+			for _, imageSet := range imageSets {
+				urls = append(urls, imageSet.Thumb.Url)
+			}
+			filePaths, err := gochallenge3.Download(urls)
+			for filePath := range filePaths {
+				gochallenge3.CommonLog.Printf("filePath: %s\n", filePath)
+			}
+
 			if err != nil {
-				log.Printf("error searching for images: %v\n", err)
+				gochallenge3.CommonLog.Printf("error searching for images: %v\n", err)
 				p.Error = err
 			} else {
 				p.SearchResultRows = gochallenge3.ToRows(5, imageSets)
