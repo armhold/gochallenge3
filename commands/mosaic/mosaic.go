@@ -16,7 +16,8 @@ var (
 
 type Page struct {
 	Title string
-	SearchResults []gochallenge3.InstagramImageSet
+//	SearchResults []gochallenge3.InstagramImageSet
+	SearchResultRows [][]gochallenge3.InstagramImageSet
 	Error error
 	Body  []byte
 }
@@ -45,13 +46,14 @@ func searchHandler(imageSource gochallenge3.ImageSource) http.HandlerFunc {
 		} else {
 			imageSets, err := imageSource.Search(searchTerm)
 
+
 			// just for debugging layout
 			p.Error = errors.New("oopsie!")
 			if err != nil {
 				log.Printf("error searching for images: %v\n", err)
 				p.Error = err
 			} else {
-				p.SearchResults = imageSets
+				p.SearchResultRows = gochallenge3.ToRows(5, imageSets)
 			}
 		}
 

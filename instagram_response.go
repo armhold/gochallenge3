@@ -36,3 +36,21 @@ func ParseInstagramJSON(jsonBytes []byte) (InstagramResponse, error) {
 	err := json.Unmarshal(jsonBytes, &result)
 	return result, err
 }
+
+func ToRows(rowLen int, imageSets []InstagramImageSet) [][]InstagramImageSet {
+	i := 0
+
+	var result [][]InstagramImageSet
+
+	for i < len(imageSets) {
+		end := i + rowLen
+		if end > len(imageSets) {
+			end = len(imageSets)
+		}
+
+		result = append(result, imageSets[i:end])
+		i = end
+	}
+
+	return result
+}
