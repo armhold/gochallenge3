@@ -46,9 +46,6 @@ func searchHandler(imageSource gochallenge3.ImageSource) http.HandlerFunc {
 		} else {
 			imageSets, err := imageSource.Search(searchTerm)
 
-
-			// just for debugging layout
-			p.Error = errors.New("oopsie!")
 			if err != nil {
 				log.Printf("error searching for images: %v\n", err)
 				p.Error = err
