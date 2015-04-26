@@ -17,10 +17,10 @@ func Download(urls []string) ([]string, error) {
     CommonLog.Printf("created tempDir: %s\n", tmpDir)
 
     var filePaths = make([]string, len(urls))
-    CommonLog.Printf("download urls => %v", urls)
 
     for i, url := range urls {
         CommonLog.Printf("download [%d] => \"%s\"", i, url)
+
         response, err := http.Get(url)
         if err != nil {
             return nil, fmt.Errorf("error while downloading %s: %s", url, err)

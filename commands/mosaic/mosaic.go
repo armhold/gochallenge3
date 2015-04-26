@@ -44,19 +44,13 @@ func searchHandler(imageSource gochallenge3.ImageSource) http.HandlerFunc {
 			imageSets, err := imageSource.Search(searchTerm)
 
 			urls := make([]string, len(imageSets))
-			for _, imageSet := range imageSets {
+			for i, imageSet := range imageSets {
 				gochallenge3.CommonLog.Printf("processing thumbnail: %s", imageSet.Thumb.Url)
-
-				if imageSet.Thumb.Url == "" {
-					gochallenge3.CommonLog.Printf("skipping thumbnail: %v", imageSet)
-				} else {
-					gochallenge3.CommonLog.Printf("including thumbnail: %v", imageSet.Thumb.Url)
-
-					urls = append(urls, imageSet.Thumb.Url)
-				}
+				urls[i] = imageSet.Thumb.Url
 			}
+
 			filePaths, err := gochallenge3.Download(urls)
-			for filePath := range filePaths {
+			for _, filePath := range filePaths {
 				gochallenge3.CommonLog.Printf("filePath: %s\n", filePath)
 			}
 
