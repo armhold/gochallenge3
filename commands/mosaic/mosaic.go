@@ -1,26 +1,29 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"github.com/armhold/gochallenge3"
 	"html/template"
 	"net/http"
 	"os"
 	"io"
-	"io/ioutil"
+	"crypto/rand"
+	"encoding/base64"
+	"path/filepath"
+	"errors"
 )
 
 var (
 	templates map[string]*template.Template
+	uploadDir string
 )
 
 type Page struct {
 	Title string
-	//	SearchResults []gochallenge3.InstagramImageSet
 	SearchResultRows [][]gochallenge3.InstagramImageSet
 	Error            error
 	Body             []byte
+	UploadID         string
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
@@ -39,11 +42,18 @@ func searchHandler(imageSource gochallenge3.ImageSource) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		p := &Page{Title: "Search Results"}
 
-		searchTerm := r.FormValue("search_term")
-		if searchTerm == "" {
-			p.Error = errors.New("search_term required")
-			// TODO: support multiple errors in p.Error
+		parts := gochallenge3.SplitPath(r.URL.Path)
+		gochallenge3.CommonLog.Printf("r.URL.Path: %s, parts: %+v, len: %d", r.URL.Path, parts, len(parts))
+		if len(parts) != 2 {
+			err := errors.New("upload_id missing")
+			gochallenge3.CommonLog.Println(err)
+			p.Error = err
 		} else {
+			p.UploadID = parts[1]
+		}
+
+		searchTerm := r.FormValue("search_term")
+		if searchTerm != "" {
 			imageSets, err := imageSource.Search(searchTerm)
 
 			urls := make([]string, len(imageSets))
@@ -82,11 +92,22 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		gochallenge3.CommonLog.Println(err)
 		p.Error = err
-		renderTemplate(w, "upload.html", p)
+		renderTemplate(w, "choose.html", p)
 	} else {
-		gochallenge3.CommonLog.Println("Image successfully uploaded to %s", file.Name())
-		renderTemplate(w, "search.html", p)
+		gochallenge3.CommonLog.Printf("Image successfully uploaded to %s", file.Name())
+		http.Redirect(w, r, fmt.Sprintf("/search/%s", filepath.Base(file.Name())), http.StatusFound)
 	}
+}
+
+func randomString() (string, error) {
+	rb := make([]byte, 8)
+	_, err := rand.Read(rb)
+
+	if err != nil {
+		return "", err
+	}
+
+	return base64.URLEncoding.EncodeToString(rb), nil
 }
 
 func receiveUploadFile(r *http.Request) (*os.File, error) {
@@ -97,10 +118,17 @@ func receiveUploadFile(r *http.Request) (*os.File, error) {
 	}
 	defer file.Close()
 
-	out, err := ioutil.TempFile("", "image_upload")
+	rs, err := randomString()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error generating upload filename: %v", err)
 	}
+
+	uploadFile := uploadDir + "/" + rs
+	out, err := os.Create(uploadFile)
+	if err != nil {
+		return nil, fmt.Errorf("error creating upload file: %v", uploadFile)
+	}
+
 	defer out.Close()
 
 	_, err = io.Copy(out, file)
@@ -123,7 +151,13 @@ func main() {
 	}
 	imageSource := gochallenge3.NewInstagramImageSource(instagramClientID)
 
-	http.HandleFunc("/search", searchHandler(imageSource))
+	uploadDir = os.Getenv("UPLOAD_DIR")
+	if uploadDir == "" {
+		panic("environment variable UPLOAD_DIR not set")
+	}
+
+
+	http.HandleFunc("/search/", searchHandler(imageSource))
 	http.HandleFunc("/upload", uploadHandler)
 	http.HandleFunc("/choose", chooseFileHandler)
 

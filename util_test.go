@@ -2,6 +2,7 @@ package gochallenge3
 
 import (
 	"testing"
+	"reflect"
 )
 
 func TestUrlEncodeSpaces(t *testing.T) {
@@ -29,5 +30,30 @@ func TestUrlEncodeDotsAndSlashes(t *testing.T) {
 
 	if got != want {
 		t.Errorf("UrlEncoded(%q) => %q, want %q", input, got, want)
+	}
+}
+
+
+func TestSplitPath(t *testing.T) {
+	expected := []string{"search", "foo"}
+
+	parts := SplitPath("/search/foo/")
+	if ! reflect.DeepEqual(expected, parts) {
+		t.Errorf("expected: %v, got: %v", expected, parts)
+	}
+
+	parts = SplitPath("/search/foo")
+	if ! reflect.DeepEqual(expected, parts) {
+		t.Errorf("expected: %v, got: %v", expected, parts)
+	}
+
+	parts = SplitPath("search/foo")
+	if ! reflect.DeepEqual(expected, parts) {
+		t.Errorf("expected: %v, got: %v", expected, parts)
+	}
+
+	parts = SplitPath("search/foo/")
+	if ! reflect.DeepEqual(expected, parts) {
+		t.Errorf("expected: %v, got: %v", expected, parts)
 	}
 }

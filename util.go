@@ -3,6 +3,7 @@ package gochallenge3
 import (
 	"net/url"
 	"regexp"
+	"strings"
 )
 
 var (
@@ -28,4 +29,12 @@ func UrlEncode(s string) (string, error) {
 		return "", err
 	}
 	return u.String(), nil
+}
+
+func SplitPath(path string) []string {
+	trimmed :=	strings.TrimFunc(path, func(r rune) bool {
+		return r == '/'
+	})
+
+	return strings.Split(trimmed, "/")
 }

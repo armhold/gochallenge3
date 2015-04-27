@@ -14,3 +14,4 @@ func TestHomeHandler(t *testing.T) {
 		t.Errorf("Home page didn't return %v", http.StatusOK)
 	}
 }
+
