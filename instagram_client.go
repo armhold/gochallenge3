@@ -82,6 +82,7 @@ func (i *InstagramImageSource) instagramAPIUrl(searchTag string) (string, error)
 	u.Path += "/media/recent"
 	parameters := url.Values{}
 	parameters.Add("client_id", i.clientID)
+	parameters.Add("count", "50")
 	u.RawQuery = parameters.Encode()
 
 	return u.String(), nil
