@@ -19,7 +19,6 @@ type Page struct {
 	Title string
 	SearchResultRows [][]gochallenge3.ImageURL
 	Error            error
-	Body             []byte
 	UploadID         string
 	Project          *gochallenge3.Project
 }
@@ -41,7 +40,6 @@ func searchHandler(imageSource gochallenge3.ImageSource) http.HandlerFunc {
 		p := &Page{Title: "Search Results"}
 
 		parts := gochallenge3.SplitPath(r.URL.Path)
-		gochallenge3.CommonLog.Printf("r.URL.Path: %s, parts: %+v, len: %d", r.URL.Path, parts, len(parts))
 		if len(parts) != 2 {
 			err := errors.New("upload_id missing")
 			gochallenge3.CommonLog.Println(err)
@@ -118,6 +116,10 @@ func createProject(r *http.Request) (*gochallenge3.Project, error) {
 	return project, project.ReceiveUpload(file)
 }
 
+func generateMosaicHandler(w http.ResponseWriter, r *http.Request) {
+	// TODO
+}
+
 
 func main() {
 	if uploadRootDir = os.Getenv("UPLOAD_DIR"); uploadRootDir == "" {
@@ -136,7 +138,7 @@ func main() {
 	http.HandleFunc("/search/", searchHandler(imageSource))
 	http.HandleFunc("/upload", uploadHandler)
 	http.HandleFunc("/choose", chooseFileHandler)
-
+	http.HandleFunc("/generate", generateMosaicHandler)
 
 	port := os.Getenv("PORT")
 	if port == "" {
