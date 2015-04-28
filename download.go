@@ -1,21 +1,12 @@
 package gochallenge3
 import (
-    "io/ioutil"
     "net/http"
     "fmt"
     "io"
     "os"
 )
 
-
-func Download(urls []ImageURL) ([]string, error) {
-    tmpDir, err := ioutil.TempDir("", "thumbnails")
-    if err != nil {
-        return nil, err
-    }
-
-    CommonLog.Printf("created tempDir: %s\n", tmpDir)
-
+func Download(urls []ImageURL, downloadDir string) ([]string, error) {
     var filePaths = make([]string, len(urls))
 
     for i, url := range urls {
@@ -27,7 +18,7 @@ func Download(urls []ImageURL) ([]string, error) {
         }
         defer response.Body.Close()
 
-        filePaths[i] = fmt.Sprintf("%s/thumb.%d", tmpDir, i)
+        filePaths[i] = fmt.Sprintf("%s/thumb.%d", downloadDir, i)
 
         output, err := os.Create(filePaths[i])
         if err != nil {

@@ -22,7 +22,7 @@
 
         <div>
             {{if gt (len .SearchResultRows) 0}}
-            <form class="form-inline" action="/generate/{{.UploadID}}">
+            <form class="form-inline" action="/generate/{{.Project.ID}}">
                 <div class="form-group">
                     <button type="submit" class="btn btn-primary" autofocus>Generate Mosaic</button>
                     <p class="help-block">or</p>
@@ -32,7 +32,7 @@
             {{end}}
 
 
-            <form class="form-inline" action="/search/{{.UploadID}}">
+            <form class="form-inline" action="/search/{{.Project.ID}}">
                 <div class="form-group">
                     {{if lt (len .SearchResultRows) 1}}
                     <label for="search_term">Enter a Search Term:</label>

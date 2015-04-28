@@ -6,16 +6,13 @@ import (
 	"html/template"
 	"net/http"
 	"os"
-	"io"
-	"crypto/rand"
-	"encoding/base64"
 	"path/filepath"
 	"errors"
 )
 
 var (
 	templates map[string]*template.Template
-	uploadDir string
+	uploadRootDir string
 )
 
 type Page struct {
@@ -24,6 +21,7 @@ type Page struct {
 	Error            error
 	Body             []byte
 	UploadID         string
+	Project          *gochallenge3.Project
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
@@ -49,14 +47,25 @@ func searchHandler(imageSource gochallenge3.ImageSource) http.HandlerFunc {
 			gochallenge3.CommonLog.Println(err)
 			p.Error = err
 		} else {
-			p.UploadID = parts[1]
+			projectID := parts[1]
+			project, err := gochallenge3.ReadProject(uploadRootDir, projectID)
+			if err != nil {
+				gochallenge3.CommonLog.Println(err)
+				p.Error = err
+			} else {
+				p.Project = project
+			}
 		}
 
 		searchTerm := r.FormValue("search_term")
 		if searchTerm != "" {
 			imageURLs, err := imageSource.Search(searchTerm)
 
-			filePaths, err := gochallenge3.Download(imageURLs)
+			// save image URLs to disk so we can use them to render mosaic, if/when the user clicks "generate"
+			imageUrlsFile := p.Project.ImageUrlsFile()
+			gochallenge3.ToFile(imageURLs, imageUrlsFile)
+
+			filePaths, err := gochallenge3.Download(imageURLs, p.Project.ThumbnailsDir())
 			for _, filePath := range filePaths {
 				gochallenge3.CommonLog.Printf("filePath: %s\n", filePath)
 			}
@@ -81,30 +90,24 @@ func chooseFileHandler(w http.ResponseWriter, r *http.Request) {
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	p := &Page{Title: "Receive Upload"}
 
-	file, err := receiveUploadFile(r)
+	project, err := createProject(r)
 
 	if err != nil {
 		gochallenge3.CommonLog.Println(err)
 		p.Error = err
 		renderTemplate(w, "choose.html", p)
 	} else {
-		gochallenge3.CommonLog.Printf("Image successfully uploaded to %s", file.Name())
-		http.Redirect(w, r, fmt.Sprintf("/search/%s", filepath.Base(file.Name())), http.StatusFound)
+		p.Project = project
+		http.Redirect(w, r, fmt.Sprintf("/search/%s", filepath.Base(project.ID)), http.StatusFound)
 	}
 }
 
-func randomString() (string, error) {
-	rb := make([]byte, 8)
-	_, err := rand.Read(rb)
-
+func createProject(r *http.Request) (*gochallenge3.Project, error) {
+	project, err := gochallenge3.NewProject(uploadRootDir)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return base64.URLEncoding.EncodeToString(rb), nil
-}
-
-func receiveUploadFile(r *http.Request) (*os.File, error) {
 	file, _, err := r.FormFile("file")
 
 	if err != nil {
@@ -112,30 +115,15 @@ func receiveUploadFile(r *http.Request) (*os.File, error) {
 	}
 	defer file.Close()
 
-	rs, err := randomString()
-	if err != nil {
-		return nil, fmt.Errorf("error generating upload filename: %v", err)
-	}
-
-	uploadFile := uploadDir + "/" + rs
-	out, err := os.Create(uploadFile)
-	if err != nil {
-		return nil, fmt.Errorf("error creating upload file: %v", uploadFile)
-	}
-
-	defer out.Close()
-
-	_, err = io.Copy(out, file)
-	if err != nil {
-		return nil, err
-	}
-
-	return out, nil
+	return project, project.ReceiveUpload(file)
 }
 
 
-
 func main() {
+	if uploadRootDir = os.Getenv("UPLOAD_DIR"); uploadRootDir == "" {
+		panic("environment variable UPLOAD_DIR not set")
+	}
+
 	http.HandleFunc("/", homeHandler)
 	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("../../public"))))
 
@@ -144,12 +132,6 @@ func main() {
 		panic("environment variable INSTAGRAM_CLIENT_ID not set")
 	}
 	imageSource := gochallenge3.NewInstagramImageSource(instagramClientID)
-
-	uploadDir = os.Getenv("UPLOAD_DIR")
-	if uploadDir == "" {
-		panic("environment variable UPLOAD_DIR not set")
-	}
-
 
 	http.HandleFunc("/search/", searchHandler(imageSource))
 	http.HandleFunc("/upload", uploadHandler)
