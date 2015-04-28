@@ -11,7 +11,7 @@ import (
 
 // simple wrapper for Instagram REST API
 type ImageSource interface {
-	Search(s string) ([]InstagramImageSet, error)
+	Search(s string) ([]ImageURL, error)
 }
 
 type InstagramImageSource struct {
@@ -22,7 +22,7 @@ func NewInstagramImageSource(clientID string) *InstagramImageSource {
 	return &InstagramImageSource{clientID: clientID}
 }
 
-func (i *InstagramImageSource) Search(s string) ([]InstagramImageSet, error) {
+func (i *InstagramImageSource) Search(s string) ([]ImageURL, error) {
 	log.Println("starting search...")
 	u, err := i.instagramAPIUrl(s)
 	if err != nil {
@@ -56,10 +56,12 @@ func (i *InstagramImageSource) Search(s string) ([]InstagramImageSet, error) {
 		return nil, err
 	}
 
-	var result []InstagramImageSet
+	var result []ImageURL
 
 	for _, datum := range got.Data {
-		result = append(result, datum.ImageSet)
+		url := datum.ImageSet.Thumb.Url
+		imageURL := ImageURL(url)
+		result = append(result, imageURL)
 	}
 
 	log.Println("search complete.	")

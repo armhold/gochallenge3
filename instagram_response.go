@@ -1,6 +1,8 @@
 package gochallenge3
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 type InstagramPagination struct {
 	MaxTagID string `json:"max_tag_id"`
@@ -35,22 +37,4 @@ func ParseInstagramJSON(jsonBytes []byte) (InstagramResponse, error) {
 
 	err := json.Unmarshal(jsonBytes, &result)
 	return result, err
-}
-
-func ToRows(rowLen int, imageSets []InstagramImageSet) [][]InstagramImageSet {
-	i := 0
-
-	var result [][]InstagramImageSet
-
-	for i < len(imageSets) {
-		end := i + rowLen
-		if end > len(imageSets) {
-			end = len(imageSets)
-		}
-
-		result = append(result, imageSets[i:end])
-		i = end
-	}
-
-	return result
 }

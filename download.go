@@ -8,7 +8,7 @@ import (
 )
 
 
-func Download(urls []string) ([]string, error) {
+func Download(urls []ImageURL) ([]string, error) {
     tmpDir, err := ioutil.TempDir("", "thumbnails")
     if err != nil {
         return nil, err
@@ -21,7 +21,7 @@ func Download(urls []string) ([]string, error) {
     for i, url := range urls {
         CommonLog.Printf("download [%d] => \"%s\"", i, url)
 
-        response, err := http.Get(url)
+        response, err := http.Get(string(url))
         if err != nil {
             return nil, fmt.Errorf("error while downloading %s: %s", url, err)
         }

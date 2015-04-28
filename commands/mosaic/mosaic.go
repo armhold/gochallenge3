@@ -20,7 +20,7 @@ var (
 
 type Page struct {
 	Title string
-	SearchResultRows [][]gochallenge3.InstagramImageSet
+	SearchResultRows [][]gochallenge3.ImageURL
 	Error            error
 	Body             []byte
 	UploadID         string
@@ -54,15 +54,9 @@ func searchHandler(imageSource gochallenge3.ImageSource) http.HandlerFunc {
 
 		searchTerm := r.FormValue("search_term")
 		if searchTerm != "" {
-			imageSets, err := imageSource.Search(searchTerm)
+			imageURLs, err := imageSource.Search(searchTerm)
 
-			urls := make([]string, len(imageSets))
-			for i, imageSet := range imageSets {
-				gochallenge3.CommonLog.Printf("processing thumbnail: %s", imageSet.Thumb.Url)
-				urls[i] = imageSet.Thumb.Url
-			}
-
-			filePaths, err := gochallenge3.Download(urls)
+			filePaths, err := gochallenge3.Download(imageURLs)
 			for _, filePath := range filePaths {
 				gochallenge3.CommonLog.Printf("filePath: %s\n", filePath)
 			}
@@ -71,7 +65,7 @@ func searchHandler(imageSource gochallenge3.ImageSource) http.HandlerFunc {
 				gochallenge3.CommonLog.Printf("error searching for images: %v\n", err)
 				p.Error = err
 			} else {
-				p.SearchResultRows = gochallenge3.ToRows(5, imageSets)
+				p.SearchResultRows = gochallenge3.ToRows(5, imageURLs)
 			}
 		}
 
