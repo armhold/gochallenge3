@@ -6,7 +6,7 @@ import (
 	"math"
 	"os"
     "image/draw"
-	"fmt"
+//	"fmt"
 )
 
 type Mosaic struct {
@@ -20,7 +20,14 @@ type Mosaic struct {
 
 
 func NewMosaic(outputW, outputH, tileW, tileH int, thumbs []string) Mosaic {
-	return Mosaic{OutputW: outputW, OutputH: outputH, TileW: tileW, TileH: tileH, thumbs: thumbs, Tiles: make([]*Tile, len(thumbs))}
+	return Mosaic{
+		OutputW: outputW,
+		OutputH: outputH,
+		TileW: tileW,
+		TileH: tileH,
+		thumbs: thumbs,
+		Tiles: make([]*Tile, len(thumbs)),
+	}
 }
 
 func (m *Mosaic) Generate(infile, outfile string) error {
@@ -39,10 +46,12 @@ func (m *Mosaic) Generate(infile, outfile string) error {
 	// create tiles from thumbnails
 	targetImg := image.NewRGBA(image.Rect(0, 0, m.OutputW, m.OutputH))
 
+	tileRect := image.Rect(0, 0, m.TileW, m.TileH)
+
 	for i, file := range m.thumbs {
 		CommonLog.Printf("loading tile: %s", file)
 
-		tile, err := NewTile(file, targetImg.Bounds())
+		tile, err := NewTile(file, tileRect)
 		m.Tiles[i] = tile
 		if err != nil {
 			return err
@@ -76,16 +85,21 @@ func (m *Mosaic) Generate(infile, outfile string) error {
 			}).SubImage(gridRect)
 
 			if subImg.Bounds().Dx() == 0 {
-				panic(fmt.Errorf("rows: %d, cols: %d, row: %d, col: %d, subImg.Bounds() == %v, gridRect = %v", rows, cols, row, col, subImg.Bounds(), gridRect))
+//				panic(fmt.Errorf("rows: %d, cols: %d, row: %d, col: %d, subImg.Bounds() == %v, gridRect = %v", rows, cols, row, col, subImg.Bounds(), gridRect))
+				continue
 			}
 
 			if subImg.Bounds().Dy() == 0 {
-				panic(fmt.Errorf("subImg.Bounds().Dy() == %d, gridRect = %v", subImg.Bounds().Dy(), gridRect))
+//				panic(fmt.Errorf("subImg.Bounds().Dy() == %d, gridRect = %v", subImg.Bounds().Dy(), gridRect))
+				continue
 			}
 
             tile := m.bestMatch(subImg)
-//            r := tile.ScaledImage.Bounds()
-            draw.Draw(targetImg, gridRect, tile.ScaledImage, image.Point{X: x0, Y: y0}, draw.Src)
+
+			CommonLog.Printf("tile bounds: %v", tile.ScaledImage.Bounds())
+
+
+            draw.Draw(targetImg, gridRect, tile.ScaledImage, tile.ScaledImage.Bounds().Min, draw.Src)
 		}
 	}
 
