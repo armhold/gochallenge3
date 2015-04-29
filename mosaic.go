@@ -7,12 +7,19 @@ import (
 	"os"
 )
 
-var (
-	tileWidth  = 100
-	tileHeight = 100
-)
+type Mosaic struct {
+    W      int
+    H      int
+    thumbs []string
+    Tiles  []Tile
+}
 
-func GenerateMosaic(thumbs []string, infile, outfile string) error {
+
+func NewMosaic(width, height int, thumbs []string) Mosaic {
+    return Mosaic{W: width, H: height, thumbs: thumbs}
+}
+
+func (m *Mosaic) Generate(infile, outfile string) error {
 	// read in source image
 	srcFile, err := os.Open(infile)
 	if err != nil {
@@ -26,10 +33,10 @@ func GenerateMosaic(thumbs []string, infile, outfile string) error {
 	}
 
 	// create tiles from thumbnails
-	tiles := make([]*Tile, len(thumbs))
-	rect := image.Rect(0, 0, tileWidth, tileHeight)
+	tiles := make([]*Tile, len(m.thumbs))
+	rect := image.Rect(0, 0, m.W, m.H)
 
-	for i, file := range thumbs {
+	for i, file := range m.thumbs {
 		tile, err := NewTile(file, rect)
 		tiles[i] = tile
 		if err != nil {
@@ -37,17 +44,17 @@ func GenerateMosaic(thumbs []string, infile, outfile string) error {
 		}
 	}
 
-	cols := srcImg.Bounds().Dx() / tileWidth
-	rows := srcImg.Bounds().Dy() / tileHeight
+	cols := srcImg.Bounds().Dx() / m.W
+	rows := srcImg.Bounds().Dy() / m.H
 
 	for row := 0; row < rows; row++ {
 		for col := 0; col < cols; col++ {
 
-			x0 := col * tileWidth
-			y0 := row * tileHeight
+			x0 := col * m.W
+			y0 := row * m.H
 
-			x1 := x0 + tileWidth
-			y1 := y0 + tileHeight
+			x1 := x0 + m.W
+			y1 := y0 + m.H
 
 			rect := image.Rect(x0, y0, x1, y1)
 			subImg := srcImg.(*image.RGBA).SubImage(rect)
