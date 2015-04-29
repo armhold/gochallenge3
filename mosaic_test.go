@@ -12,7 +12,6 @@ func TestGenerate(t *testing.T) {
         thumbs[i] = fmt.Sprintf("test_images/test_image%d.jpg", i)
     }
 
-
     mosaic := NewMosaic(3264, 2448, 50, 50, thumbs)
     outPath := "mosaic_out.jpg"
 
