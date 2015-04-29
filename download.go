@@ -28,7 +28,7 @@ func Download(urls []ImageURL, downloadDir string) ([]string, error) {
 
         _, err = io.Copy(output, response.Body)
         if err != nil {
-            return nil, fmt.Errorf("error while downloading", url, "-", err)
+            return nil, fmt.Errorf("error while downloading %s: %v", url, err)
         }
 
         CommonLog.Printf("downloaded %s to %s\n", url, filePaths[i])

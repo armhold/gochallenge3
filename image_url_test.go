@@ -46,7 +46,7 @@ func TestSerialize(t *testing.T) {
     }
 
     if len(urlsFromFile) != 5 {
-        t.Error("expected 5 urls, got %d", len(urlsFromFile))
+        t.Errorf("expected 5 urls, got %d", len(urlsFromFile))
     }
 
     for i, url := range urlsFromFile {

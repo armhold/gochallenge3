@@ -12,13 +12,11 @@ import (
 func Scale(srcImg image.Image, r image.Rectangle) image.Image {
 	dstImg := image.NewRGBA(r)
 
-	srcBounds := srcImg.Bounds()
-	sw := srcBounds.Max.X - srcBounds.Min.X
-	sh := srcBounds.Max.Y - srcBounds.Min.Y
+	sw := srcImg.Bounds().Dx()
+	sh := srcImg.Bounds().Dy()
 
-	dstBounds := dstImg.Bounds()
-	dw := dstBounds.Max.X - dstBounds.Min.X
-	dh := dstBounds.Max.Y - dstBounds.Min.Y
+	dw := dstImg.Bounds().Dx()
+	dh := dstImg.Bounds().Dy()
 
 	xAspect := float64(sw) / float64(dw)
 	yAspect := float64(sh) / float64(dh)

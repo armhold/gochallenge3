@@ -1,4 +1,5 @@
 package gochallenge3
+
 import (
     "image/color"
     "image"
