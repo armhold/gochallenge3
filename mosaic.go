@@ -5,6 +5,7 @@ import (
 	"image/color"
 	"math"
 	"os"
+    "image/draw"
 )
 
 type Mosaic struct {
@@ -27,7 +28,7 @@ func (m *Mosaic) Generate(infile, outfile string) error {
 	}
 	defer srcFile.Close()
 
-	srcImg, _, err := image.Decode(srcFile)
+	gridImg, _, err := image.Decode(srcFile)
 	if err != nil {
 		return err
 	}
@@ -44,8 +45,8 @@ func (m *Mosaic) Generate(infile, outfile string) error {
 		}
 	}
 
-	cols := srcImg.Bounds().Dx() / m.W
-	rows := srcImg.Bounds().Dy() / m.H
+	cols := gridImg.Bounds().Dx() / m.W
+	rows := gridImg.Bounds().Dy() / m.H
 
 	for row := 0; row < rows; row++ {
 		for col := 0; col < cols; col++ {
@@ -57,14 +58,19 @@ func (m *Mosaic) Generate(infile, outfile string) error {
 			y1 := y0 + m.H
 
 			rect := image.Rect(x0, y0, x1, y1)
-			subImg := srcImg.(*image.RGBA).SubImage(rect)
+			subImg := gridImg.(*image.RGBA).SubImage(rect)
 
             tile := m.bestMatch(subImg)
-			CommonLog.Printf("best tile match for %v => %v", subImg, tile)
+            r := tile.ScaledImage.Bounds()
+            outImg := image.NewRGBA(gridImg.Bounds())
+
+            draw.Draw(outImg, r, tile.ScaledImage, r.Min, draw.Src)
+
+            CommonLog.Printf("best tile match for %v => %v", subImg, tile)
 		}
 	}
 
-	return nil
+    return SavePng(gridImg, outfile)
 }
 
 func (m *Mosaic) bestMatch(img image.Image) *Tile {

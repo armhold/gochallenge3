@@ -44,15 +44,17 @@ func ScaleToFile(srcPath, dstPath string, r image.Rectangle) error {
 	if err != nil {
 		return err
 	}
+	dstImg := Scale(srcImg, r)
 
-	toFile, err := os.Create(dstPath)
+	return SavePng(dstImg, dstPath)
+}
+
+func SavePng(img image.Image, outfile string) error {
+	toFile, err := os.Create(outfile)
 	if err != nil {
 		return err
 	}
-
 	defer toFile.Close()
 
-	dstImg := Scale(srcImg, r)
-
-	return png.Encode(toFile, dstImg)
+	return png.Encode(toFile, img)
 }
