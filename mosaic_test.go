@@ -1,9 +1,9 @@
 package gochallenge3
+
 import (
     "testing"
     "fmt"
 )
-
 
 func TestGenerate(t *testing.T) {
 
@@ -13,7 +13,7 @@ func TestGenerate(t *testing.T) {
     }
 
 
-    mosaic := NewMosaic(3264, 2448, thumbs)
+    mosaic := NewMosaic(3264, 2448, 50, 50, thumbs)
     outPath := "mosaic_out.jpg"
 
     err := mosaic.Generate("test_images/source_image.jpg", outPath)

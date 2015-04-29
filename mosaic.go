@@ -9,15 +9,17 @@ import (
 )
 
 type Mosaic struct {
-    W      int
-    H      int
-    thumbs []string
-    Tiles  []*Tile
+    OutputW      int
+    OutputH      int
+	TileW        int
+	TileH        int
+    thumbs       []string
+    Tiles        []*Tile
 }
 
 
-func NewMosaic(width, height int, thumbs []string) Mosaic {
-	return Mosaic{W: width, H: height, thumbs: thumbs, Tiles: make([]*Tile, len(thumbs))}
+func NewMosaic(outputW, outputH, tileW, tileH int, thumbs []string) Mosaic {
+	return Mosaic{OutputW: outputW, OutputH: outputH, TileW: tileW, TileH: tileH, thumbs: thumbs, Tiles: make([]*Tile, len(thumbs))}
 }
 
 func (m *Mosaic) Generate(infile, outfile string) error {
@@ -34,7 +36,7 @@ func (m *Mosaic) Generate(infile, outfile string) error {
 	}
 
 	// create tiles from thumbnails
-	rect := image.Rect(0, 0, m.W, m.H)
+	rect := image.Rect(0, 0, m.OutputW, m.OutputH)
 
 	for i, file := range m.thumbs {
 		CommonLog.Printf("loading tile: %s", file)
@@ -46,49 +48,55 @@ func (m *Mosaic) Generate(infile, outfile string) error {
 		}
 	}
 
-	cols := gridImg.Bounds().Dx() / m.W
-	rows := gridImg.Bounds().Dy() / m.H
+	cols := gridImg.Bounds().Dx() / m.TileW
+	rows := gridImg.Bounds().Dy() / m.TileH
+
+	CommonLog.Printf("gridImg.Bounds().Dx(): %d, gridImg.Bounds().Dy(): %d, rows: %d, cols: %d, W: %d, H: %d", gridImg.Bounds().Dx(), gridImg.Bounds().Dy(), rows, cols, m.OutputW, m.OutputH)
+
+	outImg := image.NewRGBA(rect)
 
 	for row := 0; row < rows; row++ {
 		for col := 0; col < cols; col++ {
 
-			x0 := col * m.W
-			y0 := row * m.H
+			x0 := col * m.TileW
+			y0 := row * m.TileH
 
-			x1 := x0 + m.W
-			y1 := y0 + m.H
-
-			CommonLog.Printf("processing grid: %d, %d", row, col)
+			x1 := x0 + m.TileW
+			y1 := y0 + m.TileH
 
 			rect := image.Rect(x0, y0, x1, y1)
+			CommonLog.Printf("processing grid: %d, %d, bounds: %v", row, col, rect)
+
+			// TODO: detect proper image type for this type assertion?
 			subImg := gridImg.(*image.YCbCr).SubImage(rect)
 
             tile := m.bestMatch(subImg)
             r := tile.ScaledImage.Bounds()
-            outImg := image.NewRGBA(gridImg.Bounds())
-
-            draw.Draw(outImg, r, tile.ScaledImage, r.Min, draw.Src)
-
-            CommonLog.Printf("best tile match for %v => %v", subImg, tile)
+            draw.Draw(outImg, r, tile.ScaledImage, image.Point{X: x0, Y: y0}, draw.Src)
 		}
 	}
 
-    return SavePng(gridImg, outfile)
+    return SavePng(outImg, outfile)
 }
 
 func (m *Mosaic) bestMatch(img image.Image) *Tile {
     bestDiff := math.MaxFloat64
 	CommonLog.Printf("m.Tiles len: %d", len(m.Tiles))
-    bestTile := m.Tiles[0]
+	bestIndex := 0
+    bestTile := m.Tiles[bestIndex]
     imgAvgColor := ComputeAverageColor(img)
 
-    for _, tile := range m.Tiles {
+
+    for i, tile := range m.Tiles {
         diff := colorDiff(imgAvgColor, tile.AverageColor)
         if diff <= bestDiff {
             bestDiff = diff
             bestTile = tile
+			bestIndex = i
         }
     }
+
+	CommonLog.Printf("best tile index: %d", bestIndex)
 
     return bestTile
 }

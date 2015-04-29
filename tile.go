@@ -42,6 +42,7 @@ func ComputeAverageColor(img image.Image) color.RGBA {
 	sumA := uint32(0)
 
 	b := img.Bounds()
+	CommonLog.Printf("ComputeAverageColor bounds: %v", b)
 	count := uint32(0)
 
 	for y := b.Min.Y; y < b.Max.Y; y++ {
