@@ -32,7 +32,7 @@ func UrlEncode(s string) (string, error) {
 }
 
 func SplitPath(path string) []string {
-	trimmed :=	strings.TrimFunc(path, func(r rune) bool {
+	trimmed := strings.TrimFunc(path, func(r rune) bool {
 		return r == '/'
 	})
 

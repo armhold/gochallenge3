@@ -1,10 +1,10 @@
 package gochallenge3
 
 import (
-    "log"
-    "os"
+	"log"
+	"os"
 )
 
 var (
-    CommonLog = log.New(os.Stderr, "", log.LstdFlags | log.Lshortfile)
+	CommonLog = log.New(os.Stderr, "", log.LstdFlags|log.Lshortfile)
 )

@@ -1,22 +1,22 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"github.com/armhold/gochallenge3"
 	"html/template"
 	"net/http"
 	"os"
 	"path/filepath"
-	"errors"
 )
 
 var (
-	templates map[string]*template.Template
+	templates     map[string]*template.Template
 	uploadRootDir string
 )
 
 type Page struct {
-	Title string
+	Title            string
 	SearchResultRows [][]gochallenge3.ImageURL
 	Error            error
 	UploadID         string
@@ -31,8 +31,8 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 func init() {
 	templates = make(map[string]*template.Template)
 	templates["welcome.html"] = template.Must(template.ParseFiles("../../templates/welcome.html", "../../templates/layout.html"))
-	templates["search.html"]  = template.Must(template.ParseFiles("../../templates/search.html", "../../templates/layout.html"))
-	templates["choose.html"]  = template.Must(template.ParseFiles("../../templates/choose.html", "../../templates/layout.html"))
+	templates["search.html"] = template.Must(template.ParseFiles("../../templates/search.html", "../../templates/layout.html"))
+	templates["choose.html"] = template.Must(template.ParseFiles("../../templates/choose.html", "../../templates/layout.html"))
 }
 
 func searchHandler(imageSource gochallenge3.ImageSource) http.HandlerFunc {
@@ -119,7 +119,6 @@ func createProject(r *http.Request) (*gochallenge3.Project, error) {
 func generateMosaicHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO
 }
-
 
 func main() {
 	if uploadRootDir = os.Getenv("UPLOAD_DIR"); uploadRootDir == "" {

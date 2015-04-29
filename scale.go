@@ -30,29 +30,29 @@ func Scale(srcImg image.Image, r image.Rectangle) image.Image {
 		}
 	}
 
-    return dstImg
+	return dstImg
 }
 
 func ScaleToFile(srcPath, dstPath string, r image.Rectangle) error {
-    srcFile, err := os.Open(srcPath)
-    if err != nil {
-        return err
-    }
-    defer srcFile.Close()
+	srcFile, err := os.Open(srcPath)
+	if err != nil {
+		return err
+	}
+	defer srcFile.Close()
 
-    srcImg, _, err := image.Decode(srcFile)
-    if err != nil {
-        return err
-    }
+	srcImg, _, err := image.Decode(srcFile)
+	if err != nil {
+		return err
+	}
 
-    toFile, err := os.Create(dstPath)
-    if err != nil {
-        return err
-    }
+	toFile, err := os.Create(dstPath)
+	if err != nil {
+		return err
+	}
 
-    defer toFile.Close()
+	defer toFile.Close()
 
-    dstImg := Scale(srcImg, r)
+	dstImg := Scale(srcImg, r)
 
-    return png.Encode(toFile, dstImg)
+	return png.Encode(toFile, dstImg)
 }
