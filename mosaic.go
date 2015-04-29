@@ -11,7 +11,7 @@ type Mosaic struct {
     W      int
     H      int
     thumbs []string
-    Tiles  []Tile
+    Tiles  []*Tile
 }
 
 
@@ -58,19 +58,37 @@ func (m *Mosaic) Generate(infile, outfile string) error {
 
 			rect := image.Rect(x0, y0, x1, y1)
 			subImg := srcImg.(*image.RGBA).SubImage(rect)
-			avgColor := ComputeAverageColor(subImg)
-			CommonLog.Printf("average color for %d, %d => %v", row, col, avgColor)
+
+            tile := m.bestMatch(subImg)
+			CommonLog.Printf("best tile match for %v => %v", subImg, tile)
 		}
 	}
 
 	return nil
 }
 
+func (m *Mosaic) bestMatch(img image.Image) *Tile {
+    bestDiff := math.MaxFloat64
+    bestTile := m.Tiles[0]
+    imgAvgColor := ComputeAverageColor(img)
+
+    for _, tile := range m.Tiles {
+        diff := colorDiff(imgAvgColor, tile.AverageColor)
+        if diff <= bestDiff {
+            bestDiff = diff
+            bestTile = tile
+        }
+    }
+
+    return bestTile
+}
+
+
 func colorDiff(c1, c2 color.RGBA) float64 {
-	dR := math.Pow(float64(c1.R-c2.R), 2)
-	dG := math.Pow(float64(c1.G-c2.G), 2)
-	dB := math.Pow(float64(c1.B-c2.B), 2)
-	dA := math.Pow(float64(c1.A-c2.A), 2)
+	dR := math.Pow(math.Abs(float64(c1.R-c2.R)), 2)
+	dG := math.Pow(math.Abs(float64(c1.G-c2.G)), 2)
+	dB := math.Pow(math.Abs(float64(c1.B-c2.B)), 2)
+	dA := math.Pow(math.Abs(float64(c1.A-c2.A)), 2)
 
 	return math.Sqrt(dR + dG + dB + dA)
 }

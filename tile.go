@@ -8,7 +8,7 @@ import (
 )
 
 type Tile struct {
-	AverageColor color.Color
+	AverageColor color.RGBA
 	ScaledImage  image.Image
 }
 
@@ -35,7 +35,7 @@ func NewTile(filePath string, r image.Rectangle) (*Tile, error) {
 	return &Tile{ScaledImage: scaledImg, AverageColor: avgColor}, nil
 }
 
-func ComputeAverageColor(img image.Image) color.Color {
+func ComputeAverageColor(img image.Image) color.RGBA {
 	sumR := uint32(0)
 	sumG := uint32(0)
 	sumB := uint32(0)
