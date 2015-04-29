@@ -17,8 +17,13 @@ func TestScale(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	ExpectedImgBounds(expectW, expectH, dstPath, t)
 
-	dstFile, err := os.Open(dstPath)
+	os.Remove(dstPath)
+}
+
+func ExpectedImgBounds(expectW, expectH int, imgPath string, t *testing.T) {
+	dstFile, err := os.Open(imgPath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -40,6 +45,4 @@ func TestScale(t *testing.T) {
 	if h != expectH {
 		t.Errorf("expected width %d, got %d", expectH, h)
 	}
-
-	os.Remove(dstPath)
 }

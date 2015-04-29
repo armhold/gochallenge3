@@ -17,7 +17,7 @@ type Mosaic struct {
 
 
 func NewMosaic(width, height int, thumbs []string) Mosaic {
-    return Mosaic{W: width, H: height, thumbs: thumbs}
+	return Mosaic{W: width, H: height, thumbs: thumbs, Tiles: make([]*Tile, len(thumbs))}
 }
 
 func (m *Mosaic) Generate(infile, outfile string) error {
@@ -34,12 +34,13 @@ func (m *Mosaic) Generate(infile, outfile string) error {
 	}
 
 	// create tiles from thumbnails
-	tiles := make([]*Tile, len(m.thumbs))
 	rect := image.Rect(0, 0, m.W, m.H)
 
 	for i, file := range m.thumbs {
+		CommonLog.Printf("loading tile: %s", file)
+
 		tile, err := NewTile(file, rect)
-		tiles[i] = tile
+		m.Tiles[i] = tile
 		if err != nil {
 			return err
 		}
@@ -57,8 +58,10 @@ func (m *Mosaic) Generate(infile, outfile string) error {
 			x1 := x0 + m.W
 			y1 := y0 + m.H
 
+			CommonLog.Printf("processing grid: %d, %d", row, col)
+
 			rect := image.Rect(x0, y0, x1, y1)
-			subImg := gridImg.(*image.RGBA).SubImage(rect)
+			subImg := gridImg.(*image.YCbCr).SubImage(rect)
 
             tile := m.bestMatch(subImg)
             r := tile.ScaledImage.Bounds()
@@ -75,6 +78,7 @@ func (m *Mosaic) Generate(infile, outfile string) error {
 
 func (m *Mosaic) bestMatch(img image.Image) *Tile {
     bestDiff := math.MaxFloat64
+	CommonLog.Printf("m.Tiles len: %d", len(m.Tiles))
     bestTile := m.Tiles[0]
     imgAvgColor := ComputeAverageColor(img)
 
