@@ -48,10 +48,10 @@ func ComputeAverageColor(img image.Image) color.RGBA {
 	for y := b.Min.Y; y < b.Max.Y; y++ {
 		for x := b.Min.X; x < b.Max.X; x++ {
 			r, g, b, a := img.At(x, y).RGBA()
-			sumR += uint32(r)
-			sumG += uint32(g)
-			sumB += uint32(b)
-			sumA += uint32(a)
+			sumR += uint32(r) >> 8
+			sumG += uint32(g) >> 8
+			sumB += uint32(b) >> 8
+			sumA += uint32(a) >> 8
 			count++
 		}
 	}
