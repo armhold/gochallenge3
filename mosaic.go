@@ -125,7 +125,7 @@ func (m *Mosaic) bestMatch(img image.Image) *Tile {
         }
     }
 
-	CommonLog.Printf("best tile index: %d", bestIndex)
+	CommonLog.Printf("best tile index: %d, colorDiff: %f, color: %v", bestIndex, bestDiff, bestTile.AverageColor)
 
     return bestTile
 }

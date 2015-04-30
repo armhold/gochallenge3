@@ -7,7 +7,7 @@ import (
 
 func TestGenerate(t *testing.T) {
 
-    thumbs := make([]string, 23)
+    thumbs := make([]string, 50)
     for i, _ := range thumbs {
         thumbs[i] = fmt.Sprintf("test_images/test_image%d.jpg", i)
     }
