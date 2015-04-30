@@ -21,8 +21,8 @@ func Scale(srcImg image.Image, r image.Rectangle) image.Image {
 	xAspect := float64(sw) / float64(dw)
 	yAspect := float64(sh) / float64(dh)
 
-	for y := 0; y < sh; y++ {
-		for x := 0; x < sw; x++ {
+	for y := 0; y < dh; y++ {
+		for x := 0; x < dw; x++ {
 			srcX := int(math.Floor(float64(x) * xAspect))
 			srcY := int(math.Floor(float64(y) * yAspect))
 			pix := srcImg.At(srcX, srcY)
