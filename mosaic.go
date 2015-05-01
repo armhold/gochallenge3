@@ -107,7 +107,7 @@ func (m *Mosaic) Generate(infile, outfile string) error {
 }
 
 func (m *Mosaic) bestMatch(img image.Image) *Tile {
-    bestDiff := math.MaxFloat64
+    bestDiff := uint32(math.MaxUint32)
 	CommonLog.Printf("m.Tiles len: %d", len(m.Tiles))
 	bestIndex := 0
     bestTile := m.Tiles[bestIndex]
@@ -131,11 +131,17 @@ func (m *Mosaic) bestMatch(img image.Image) *Tile {
 }
 
 
-func colorDiff(c1, c2 color.RGBA) float64 {
-	dR := math.Pow(math.Abs(float64(c1.R-c2.R)), 2)
-	dG := math.Pow(math.Abs(float64(c1.G-c2.G)), 2)
-	dB := math.Pow(math.Abs(float64(c1.B-c2.B)), 2)
-	dA := math.Pow(math.Abs(float64(c1.A-c2.A)), 2)
+// borrowed from func (p Palette) Index(c Color) int
+//
+func colorDiff(c1, c2 color.RGBA) uint32 {
+	delta := int32(c1.R) - int32(c2.R) >> 1
+	ssd := uint32(delta * delta)
 
-	return math.Sqrt(dR + dG + dB + dA)
+	delta = int32(c1.G) - int32(c2.G) >> 1
+	ssd += uint32(delta * delta)
+
+	delta = int32(c1.B) - int32(c2.B) >> 1
+	ssd += uint32(delta * delta)
+
+	return ssd
 }
