@@ -30,9 +30,10 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 
 func init() {
 	templates = make(map[string]*template.Template)
-	templates["welcome.html"] = template.Must(template.ParseFiles("../../templates/welcome.html", "../../templates/layout.html"))
-	templates["search.html"] = template.Must(template.ParseFiles("../../templates/search.html", "../../templates/layout.html"))
-	templates["choose.html"] = template.Must(template.ParseFiles("../../templates/choose.html", "../../templates/layout.html"))
+	templates["welcome.html"]   = template.Must(template.ParseFiles("../../templates/welcome.html",   "../../templates/layout.html"))
+	templates["search.html"]    = template.Must(template.ParseFiles("../../templates/search.html",    "../../templates/layout.html"))
+	templates["choose.html"]    = template.Must(template.ParseFiles("../../templates/choose.html",    "../../templates/layout.html"))
+	templates["generated.html"] = template.Must(template.ParseFiles("../../templates/generated.html", "../../templates/layout.html"))
 }
 
 func searchHandler(imageSource gochallenge3.ImageSource) http.HandlerFunc {
@@ -60,8 +61,7 @@ func searchHandler(imageSource gochallenge3.ImageSource) http.HandlerFunc {
 			imageURLs, err := imageSource.Search(searchTerm)
 
 			// save image URLs to disk so we can use them to render mosaic, if/when the user clicks "generate"
-			imageUrlsFile := p.Project.ImageUrlsFile()
-			gochallenge3.ToFile(imageURLs, imageUrlsFile)
+			p.Project.ToFile(imageURLs)
 
 			filePaths, err := gochallenge3.Download(imageURLs, p.Project.ThumbnailsDir())
 			for _, filePath := range filePaths {
@@ -117,7 +117,42 @@ func createProject(r *http.Request) (*gochallenge3.Project, error) {
 }
 
 func generateMosaicHandler(w http.ResponseWriter, r *http.Request) {
-	// TODO
+	p := &Page{Title: "Generate Mosaic"}
+
+	parts := gochallenge3.SplitPath(r.URL.Path)
+	if len(parts) != 2 {
+		err := errors.New("upload_id missing")
+		gochallenge3.CommonLog.Println(err)
+		p.Error = err
+	} else {
+		projectID := parts[1]
+		project, err := gochallenge3.ReadProject(uploadRootDir, projectID)
+		if err != nil {
+			gochallenge3.CommonLog.Println(err)
+			p.Error = err
+		} else {
+			p.Project = project
+			if err != nil {
+				gochallenge3.CommonLog.Println(err)
+				p.Error = err
+			} else {
+				thumbs, err := project.Thumbnails()
+				if err != nil {
+					gochallenge3.CommonLog.Println(err)
+					p.Error = err
+				}
+
+				m := gochallenge3.NewMosaic(50, 50, thumbs)
+				err = m.Generate(project.UploadedImageFile(), project.GeneratedMosaicFile())
+				if err != nil {
+					gochallenge3.CommonLog.Println(err)
+					p.Error = err
+				}
+			}
+		}
+	}
+
+	renderTemplate(w, "generated.html", p)
 }
 
 func main() {
@@ -137,7 +172,7 @@ func main() {
 	http.HandleFunc("/search/", searchHandler(imageSource))
 	http.HandleFunc("/upload", uploadHandler)
 	http.HandleFunc("/choose", chooseFileHandler)
-	http.HandleFunc("/generate", generateMosaicHandler)
+	http.HandleFunc("/generate/", generateMosaicHandler)
 
 	port := os.Getenv("PORT")
 	if port == "" {

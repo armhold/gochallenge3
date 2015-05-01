@@ -19,10 +19,8 @@ type Mosaic struct {
 }
 
 
-func NewMosaic(outputW, outputH, tileW, tileH int, thumbs []string) Mosaic {
+func NewMosaic(tileW, tileH int, thumbs []string) Mosaic {
 	return Mosaic{
-		OutputW: outputW,
-		OutputH: outputH,
 		TileW: tileW,
 		TileH: tileH,
 		thumbs: thumbs,
@@ -44,7 +42,7 @@ func (m *Mosaic) Generate(infile, outfile string) error {
 	}
 
 	// create tiles from thumbnails
-	targetImg := image.NewRGBA(image.Rect(0, 0, m.OutputW, m.OutputH))
+	targetImg := image.NewRGBA(image.Rect(0, 0, gridImg.Bounds().Dx()* 4, gridImg.Bounds().Dy() * 4))
 
 	tileRect := image.Rect(0, 0, m.TileW, m.TileH)
 

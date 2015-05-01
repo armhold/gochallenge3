@@ -7,6 +7,8 @@ import (
 	"io"
 	"os"
 	"path"
+	"bufio"
+	"path/filepath"
 )
 
 // Project represents a mosaic project- the uploaded file, selected tile images, and resulting mosaic image
@@ -85,8 +87,16 @@ func (p *Project) UploadedImageFile() string {
 	return path.Join(p.uploadRootDir, p.ID, "uploaded_image")
 }
 
+func (p *Project) GeneratedMosaicFile() string {
+	return path.Join(p.uploadRootDir, p.ID, "mosaic")
+}
+
 func (p *Project) UploadedImageDir() string {
 	return path.Join(p.uploadRootDir, p.ID)
+}
+
+func (p *Project) Thumbnails() ([]string, error) {
+	return filepath.Glob(p.ThumbnailsDir() + "/thumb*")
 }
 
 func randomString() (string, error) {
@@ -99,3 +109,40 @@ func randomString() (string, error) {
 
 	return base64.URLEncoding.EncodeToString(rb), nil
 }
+
+func (p *Project) ToFile(urls []ImageURL) error {
+	file, err := os.Create(p.ImageUrlsFile())
+
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	for _, url := range urls {
+		line := string(url) + "\n"
+		_, err := io.WriteString(file, line)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (p *Project) FromFile() ([]string, error) {
+	file, err := os.Open(p.ImageUrlsFile())
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var result []string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		url := scanner.Text()
+		result = append(result, url)
+	}
+
+	return result, scanner.Err()
+}
+
