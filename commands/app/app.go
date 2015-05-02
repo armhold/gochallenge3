@@ -119,41 +119,63 @@ func createProject(r *http.Request) (*gochallenge3.Project, error) {
 func generateMosaicHandler(w http.ResponseWriter, r *http.Request) {
 	p := &Page{Title: "Generate Mosaic"}
 
-	parts := gochallenge3.SplitPath(r.URL.Path)
-	if len(parts) != 2 {
-		err := errors.New("upload_id missing")
+	project, err := generateMosaic(w, r)
+	if err != nil {
 		gochallenge3.CommonLog.Println(err)
 		p.Error = err
-	} else {
-		projectID := parts[1]
-		project, err := gochallenge3.ReadProject(uploadRootDir, projectID)
-		if err != nil {
-			gochallenge3.CommonLog.Println(err)
-			p.Error = err
-		} else {
-			p.Project = project
-			if err != nil {
-				gochallenge3.CommonLog.Println(err)
-				p.Error = err
-			} else {
-				thumbs, err := project.Thumbnails()
-				if err != nil {
-					gochallenge3.CommonLog.Println(err)
-					p.Error = err
-				}
-
-				m := gochallenge3.NewMosaic(50, 50, thumbs)
-				err = m.Generate(project.UploadedImageFile(), project.GeneratedMosaicFile())
-				if err != nil {
-					gochallenge3.CommonLog.Println(err)
-					p.Error = err
-				}
-			}
-		}
 	}
+	p.Project = project
 
 	renderTemplate(w, "generated.html", p)
 }
+
+func generateMosaic(w http.ResponseWriter, r *http.Request) (*gochallenge3.Project, error) {
+	parts := gochallenge3.SplitPath(r.URL.Path)
+	if len(parts) != 2 {
+		return nil, errors.New("upload_id missing")
+	}
+
+	projectID := parts[1]
+	project, err := gochallenge3.ReadProject(uploadRootDir, projectID)
+	if err != nil {
+		return nil, err
+	}
+
+	thumbs, err := project.Thumbnails()
+	if err != nil {
+		return nil, err
+	}
+
+	m := gochallenge3.NewMosaic(50, 50, thumbs)
+	err = m.Generate(project.UploadedImageFile(), project.GeneratedMosaicFile())
+	if err != nil {
+		return nil, err
+	}
+
+	return project, nil
+}
+
+func downloadMosaicHandler(w http.ResponseWriter, r *http.Request) {
+	parts := gochallenge3.SplitPath(r.URL.Path)
+	if len(parts) != 2 {
+		err := "upload_id missing"
+		gochallenge3.CommonLog.Println(err)
+		http.Error(w, err, http.StatusBadRequest)
+		return
+	}
+
+	projectID := parts[1]
+	project, err := gochallenge3.ReadProject(uploadRootDir, projectID)
+	if err != nil {
+		gochallenge3.CommonLog.Println(err)
+		http.NotFound(w, r)
+		return
+	}
+
+	http.ServeFile(w, r, project.GeneratedMosaicFile())
+}
+
+
 
 func main() {
 	if uploadRootDir = os.Getenv("UPLOAD_DIR"); uploadRootDir == "" {
@@ -173,6 +195,7 @@ func main() {
 	http.HandleFunc("/upload", uploadHandler)
 	http.HandleFunc("/choose", chooseFileHandler)
 	http.HandleFunc("/generate/", generateMosaicHandler)
+	http.HandleFunc("/download/", downloadMosaicHandler)
 
 	port := os.Getenv("PORT")
 	if port == "" {

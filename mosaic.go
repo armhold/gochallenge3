@@ -42,7 +42,7 @@ func (m *Mosaic) Generate(infile, outfile string) error {
 	}
 
 	// create tiles from thumbnails
-	targetImg := image.NewRGBA(image.Rect(0, 0, gridImg.Bounds().Dx()* 4, gridImg.Bounds().Dy() * 4))
+	targetImg := image.NewRGBA(image.Rect(0, 0, gridImg.Bounds().Dx()* 2, gridImg.Bounds().Dy() * 2))
 
 	tileRect := image.Rect(0, 0, m.TileW, m.TileH)
 

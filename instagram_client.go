@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	maxResults = 200
+	maxResults = 1000
 )
 
 
