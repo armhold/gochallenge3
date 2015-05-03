@@ -33,7 +33,7 @@ func init() {
 	templates["welcome.html"]   = template.Must(template.ParseFiles("../../templates/welcome.html",   "../../templates/layout.html"))
 	templates["search.html"]    = template.Must(template.ParseFiles("../../templates/search.html",    "../../templates/layout.html"))
 	templates["choose.html"]    = template.Must(template.ParseFiles("../../templates/choose.html",    "../../templates/layout.html"))
-	templates["generated.html"] = template.Must(template.ParseFiles("../../templates/generated.html", "../../templates/layout.html"))
+	templates["results.html"]   = template.Must(template.ParseFiles("../../templates/results.html",   "../../templates/layout.html"))
 }
 
 func searchHandler(imageSource gochallenge3.ImageSource) http.HandlerFunc {
@@ -85,6 +85,27 @@ func chooseFileHandler(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, "choose.html", p)
 }
 
+func resultsHandler(w http.ResponseWriter, r *http.Request) {
+	p := &Page{Title: "Mosaic Results"}
+
+	parts := gochallenge3.SplitPath(r.URL.Path)
+	if len(parts) != 2 {
+		err := "upload_id missing"
+		gochallenge3.CommonLog.Println(err)
+		http.Error(w, err, http.StatusBadRequest)
+	} else {
+		projectID := parts[1]
+		project, err := gochallenge3.ReadProject(uploadRootDir, projectID)
+		if err != nil {
+			gochallenge3.CommonLog.Println(err)
+			http.NotFound(w, r)
+		}
+		p.Project = project
+	}
+
+	renderTemplate(w, "results.html", p)
+}
+
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	p := &Page{Title: "Receive Upload"}
 
@@ -126,7 +147,7 @@ func generateMosaicHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	p.Project = project
 
-	renderTemplate(w, "generated.html", p)
+	http.Redirect(w, r, fmt.Sprintf("/results/%s", filepath.Base(project.ID)), http.StatusFound)
 }
 
 func generateMosaic(w http.ResponseWriter, r *http.Request) (*gochallenge3.Project, error) {
@@ -191,10 +212,11 @@ func main() {
 	}
 	imageSource := gochallenge3.NewInstagramImageSource(instagramClientID)
 
-	http.HandleFunc("/search/", searchHandler(imageSource))
-	http.HandleFunc("/upload", uploadHandler)
-	http.HandleFunc("/choose", chooseFileHandler)
+	http.HandleFunc("/search/",   searchHandler(imageSource))
+	http.HandleFunc("/upload",    uploadHandler)
+	http.HandleFunc("/choose",    chooseFileHandler)
 	http.HandleFunc("/generate/", generateMosaicHandler)
+	http.HandleFunc("/results/",  resultsHandler)
 	http.HandleFunc("/download/", downloadMosaicHandler)
 
 	port := os.Getenv("PORT")
