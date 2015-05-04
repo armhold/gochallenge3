@@ -34,50 +34,46 @@ func init() {
 	templates["search.html"]    = template.Must(template.ParseFiles("../../templates/search.html",    "../../templates/layout.html"))
 	templates["choose.html"]    = template.Must(template.ParseFiles("../../templates/choose.html",    "../../templates/layout.html"))
 	templates["results.html"]   = template.Must(template.ParseFiles("../../templates/results.html",   "../../templates/layout.html"))
+	templates["404.html"]       = template.Must(template.ParseFiles("../../templates/404.html",       "../../templates/layout.html"))
+	templates["500.html"]       = template.Must(template.ParseFiles("../../templates/500.html",       "../../templates/layout.html"))
 }
 
-func searchHandler(imageSource gochallenge3.ImageSource) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		p := &Page{Title: "Search Results"}
+func searchHandler(context *appContext, w http.ResponseWriter, r *http.Request) (int, error) {
+	p := &Page{Title: "Search Results"}
 
-		parts := gochallenge3.SplitPath(r.URL.Path)
-		if len(parts) != 2 {
-			err := errors.New("upload_id missing")
-			gochallenge3.CommonLog.Println(err)
-			p.Error = err
-		} else {
-			projectID := parts[1]
-			project, err := gochallenge3.ReadProject(uploadRootDir, projectID)
-			if err != nil {
-				gochallenge3.CommonLog.Println(err)
-				p.Error = err
-			} else {
-				p.Project = project
-			}
+	parts := gochallenge3.SplitPath(r.URL.Path)
+	if len(parts) != 2 {
+		return http.StatusBadRequest, errors.New("upload_id missing")
+	}
+
+	projectID := parts[1]
+	project, err := gochallenge3.ReadProject(uploadRootDir, projectID)
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	p.Project = project
+
+	searchTerm := r.FormValue("search_term")
+	if searchTerm != "" {
+		imageURLs, err := context.imageSource.Search(searchTerm)
+
+		// save image URLs to disk so we can use them to render mosaic, if/when the user clicks "generate"
+		p.Project.ToFile(imageURLs)
+
+		filePaths, err := gochallenge3.Download(imageURLs, p.Project.ThumbnailsDir())
+		for _, filePath := range filePaths {
+			gochallenge3.CommonLog.Printf("filePath: %s\n", filePath)
 		}
-
-		searchTerm := r.FormValue("search_term")
-		if searchTerm != "" {
-			imageURLs, err := imageSource.Search(searchTerm)
-
-			// save image URLs to disk so we can use them to render mosaic, if/when the user clicks "generate"
-			p.Project.ToFile(imageURLs)
-
-			filePaths, err := gochallenge3.Download(imageURLs, p.Project.ThumbnailsDir())
-			for _, filePath := range filePaths {
-				gochallenge3.CommonLog.Printf("filePath: %s\n", filePath)
-			}
-
-			if err != nil {
-				gochallenge3.CommonLog.Printf("error searching for images: %v\n", err)
-				p.Error = err
-			} else {
-				p.SearchResultRows = gochallenge3.ToRows(5, imageURLs)
-			}
+		if err != nil {
+			return http.StatusInternalServerError, fmt.Errorf("error searching for images: %v\n", err)
 		}
+		p.SearchResultRows = gochallenge3.ToRows(5, imageURLs)
+	}
 
-		renderTemplate(w, "search.html", p)
-	})
+	renderTemplate(w, "search.html", p)
+
+	return http.StatusOK, nil
 }
 
 func chooseFileHandler(w http.ResponseWriter, r *http.Request) {
@@ -117,7 +113,11 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		renderTemplate(w, "choose.html", p)
 	} else {
 		p.Project = project
-		http.Redirect(w, r, fmt.Sprintf("/search/%s", filepath.Base(project.ID)), http.StatusFound)
+
+		redirectTo := fmt.Sprintf("/search/%s", filepath.Base(project.ID))
+
+		gochallenge3.CommonLog.Printf("redirect to %s", redirectTo)
+		http.Redirect(w, r, redirectTo, http.StatusFound)
 	}
 }
 
@@ -196,6 +196,39 @@ func downloadMosaicHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, project.GeneratedMosaicFile())
 }
 
+type appContext struct {
+	imageSource gochallenge3.ImageSource
+	templates map[string]*template.Template
+}
+
+
+type appHandler struct {
+	*appContext
+	h func(*appContext, http.ResponseWriter, *http.Request) (int, error)
+}
+
+
+// implement http.Handler
+func (ah appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if status, err := ah.h(ah.appContext, w, r); err != nil {
+		gochallenge3.CommonLog.Println(err)
+
+		switch status {
+			// We can have cases as granular as we like, if we wanted to
+			// return custom errors for specific status codes.
+			case http.StatusNotFound:
+  			    http.NotFound(w, r)
+			    renderTemplate(w, "404.tmpl", nil)
+
+			case http.StatusInternalServerError:
+			    http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			    renderTemplate(w, "500.tmpl", nil)
+			default:
+			    // Catch any other errors we haven't explicitly handled
+			   http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		}
+	}
+}
 
 
 func main() {
@@ -212,9 +245,12 @@ func main() {
 	}
 	imageSource := gochallenge3.NewInstagramImageSource(instagramClientID)
 
-	http.HandleFunc("/search/",   searchHandler(imageSource))
-	http.HandleFunc("/upload",    uploadHandler)
+
+	context := &appContext{imageSource: imageSource}
+
 	http.HandleFunc("/choose",    chooseFileHandler)
+	http.HandleFunc("/upload",    uploadHandler)
+	http.Handle("/search/",   appHandler{context, searchHandler})
 	http.HandleFunc("/generate/", generateMosaicHandler)
 	http.HandleFunc("/results/",  resultsHandler)
 	http.HandleFunc("/download/", downloadMosaicHandler)
@@ -230,6 +266,7 @@ func main() {
 func renderTemplate(w http.ResponseWriter, templatePath string, p *Page) {
 	err := templates[templatePath].ExecuteTemplate(w, "layout", p)
 	if err != nil {
+		gochallenge3.CommonLog.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
