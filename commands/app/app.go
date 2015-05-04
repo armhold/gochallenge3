@@ -15,7 +15,10 @@ var (
 	uploadRootDir string
 )
 
-type Page struct {
+type appContext struct {
+	imageSource gochallenge3.ImageSource
+	templates map[string]*template.Template
+
 	Title            string
 	SearchResultRows [][]gochallenge3.ImageURL
 	Error            error
@@ -23,8 +26,16 @@ type Page struct {
 	Project          *gochallenge3.Project
 }
 
+
+type appHandler struct {
+	*appContext
+	h func(*appContext, http.ResponseWriter, *http.Request) (int, error)
+}
+
+
+
 func homeHandler(w http.ResponseWriter, r *http.Request) {
-	p := &Page{Title: "Welcome"}
+	p := &appContext{Title: "Welcome"}
 	renderTemplate(w, "welcome.html", p)
 }
 
@@ -39,7 +50,7 @@ func init() {
 }
 
 func searchHandler(context *appContext, w http.ResponseWriter, r *http.Request) (int, error) {
-	p := &Page{Title: "Search Results"}
+	p := &appContext{Title: "Search Results"}
 
 	parts := gochallenge3.SplitPath(r.URL.Path)
 	if len(parts) != 2 {
@@ -77,33 +88,33 @@ func searchHandler(context *appContext, w http.ResponseWriter, r *http.Request) 
 }
 
 func chooseFileHandler(w http.ResponseWriter, r *http.Request) {
-	p := &Page{Title: "Image Upload"}
+	p := &appContext{Title: "Image Upload"}
 	renderTemplate(w, "choose.html", p)
 }
 
-func resultsHandler(w http.ResponseWriter, r *http.Request) {
-	p := &Page{Title: "Mosaic Results"}
+func resultsHandler(context *appContext, w http.ResponseWriter, r *http.Request) (int, error) {
+	context.Title = "Mosaic Results"
 
 	parts := gochallenge3.SplitPath(r.URL.Path)
 	if len(parts) != 2 {
-		err := "upload_id missing"
-		gochallenge3.CommonLog.Println(err)
-		http.Error(w, err, http.StatusBadRequest)
-	} else {
-		projectID := parts[1]
-		project, err := gochallenge3.ReadProject(uploadRootDir, projectID)
-		if err != nil {
-			gochallenge3.CommonLog.Println(err)
-			http.NotFound(w, r)
-		}
-		p.Project = project
+		return http.StatusBadRequest, errors.New("upload_id_missing")
 	}
 
-	renderTemplate(w, "results.html", p)
+	projectID := parts[1]
+	project, err := gochallenge3.ReadProject(uploadRootDir, projectID)
+	if err != nil {
+//		renderTemplate(w, "results.html", context)
+		return http.StatusBadRequest, err
+	}
+
+	context.Project = project
+
+	renderTemplate(w, "results.html", context)
+	return http.StatusOK, nil
 }
 
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
-	p := &Page{Title: "Receive Upload"}
+	p := &appContext{Title: "Receive Upload"}
 
 	project, err := createProject(r)
 
@@ -138,7 +149,7 @@ func createProject(r *http.Request) (*gochallenge3.Project, error) {
 }
 
 func generateMosaicHandler(w http.ResponseWriter, r *http.Request) {
-	p := &Page{Title: "Generate Mosaic"}
+	p := &appContext{Title: "Generate Mosaic"}
 
 	project, err := generateMosaic(w, r)
 	if err != nil {
@@ -196,18 +207,6 @@ func downloadMosaicHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, project.GeneratedMosaicFile())
 }
 
-type appContext struct {
-	imageSource gochallenge3.ImageSource
-	templates map[string]*template.Template
-}
-
-
-type appHandler struct {
-	*appContext
-	h func(*appContext, http.ResponseWriter, *http.Request) (int, error)
-}
-
-
 // implement http.Handler
 func (ah appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if status, err := ah.h(ah.appContext, w, r); err != nil {
@@ -218,14 +217,19 @@ func (ah appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			// return custom errors for specific status codes.
 			case http.StatusNotFound:
   			    http.NotFound(w, r)
-			    renderTemplate(w, "404.tmpl", nil)
+			    renderTemplate(w, "404.html", ah.appContext)
+
+			case http.StatusBadRequest:
+  			    http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 
 			case http.StatusInternalServerError:
 			    http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			    renderTemplate(w, "500.tmpl", nil)
+			    renderTemplate(w, "500.html", ah.appContext)
+
 			default:
 			    // Catch any other errors we haven't explicitly handled
 			   http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			   renderTemplate(w, "500.html", ah.appContext)
 		}
 	}
 }
@@ -250,9 +254,9 @@ func main() {
 
 	http.HandleFunc("/choose",    chooseFileHandler)
 	http.HandleFunc("/upload",    uploadHandler)
-	http.Handle("/search/",   appHandler{context, searchHandler})
+	http.Handle("/search/",       appHandler{context, searchHandler})
 	http.HandleFunc("/generate/", generateMosaicHandler)
-	http.HandleFunc("/results/",  resultsHandler)
+	http.Handle("/results/",      appHandler{context, resultsHandler})
 	http.HandleFunc("/download/", downloadMosaicHandler)
 
 	port := os.Getenv("PORT")
@@ -263,8 +267,8 @@ func main() {
 	http.ListenAndServe(":"+port, nil)
 }
 
-func renderTemplate(w http.ResponseWriter, templatePath string, p *Page) {
-	err := templates[templatePath].ExecuteTemplate(w, "layout", p)
+func renderTemplate(w http.ResponseWriter, templatePath string, context *appContext) {
+	err := templates[templatePath].ExecuteTemplate(w, "layout", context)
 	if err != nil {
 		gochallenge3.CommonLog.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)

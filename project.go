@@ -27,7 +27,7 @@ func ReadProject(uploadRootDir, id string) (*Project, error) {
 	}
 
 	if !fileInfo.IsDir() {
-		err = fmt.Errorf("%s is not a directory", result.UploadedImageDir())
+		return nil, fmt.Errorf("%s is not a directory", result.UploadedImageDir())
 	}
 
 	return result, nil
