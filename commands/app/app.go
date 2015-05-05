@@ -212,7 +212,9 @@ func (ah appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(status)
 	}
 
-	renderTemplate(w, template, ah.appContext)
+	if template != "" {
+		renderTemplate(w, template, ah.appContext)
+	}
 }
 
 
