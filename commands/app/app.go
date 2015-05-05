@@ -29,7 +29,7 @@ type appContext struct {
 
 type appHandler struct {
 	*appContext
-	h func(*appContext, http.ResponseWriter, *http.Request) (int, error)
+	h func(*appContext, http.ResponseWriter, *http.Request) (status int, template string, error error)
 }
 
 
@@ -49,42 +49,40 @@ func init() {
 	templates["500.html"]       = template.Must(template.ParseFiles("../../templates/500.html",       "../../templates/layout.html"))
 }
 
-func searchHandler(context *appContext, w http.ResponseWriter, r *http.Request) (int, error) {
-	p := &appContext{Title: "Search Results"}
+func searchHandler(context *appContext, w http.ResponseWriter, r *http.Request) (int, string, error) {
+	context.Title = "Search Results"
 
 	parts := gochallenge3.SplitPath(r.URL.Path)
 	if len(parts) != 2 {
-		return http.StatusBadRequest, errors.New("upload_id missing")
+		return http.StatusBadRequest, "search.html", errors.New("upload_id missing")
 	}
 
 	projectID := parts[1]
 	project, err := gochallenge3.ReadProject(uploadRootDir, projectID)
 	if err != nil {
-		return http.StatusInternalServerError, err
+		return http.StatusInternalServerError, "search.html", err
 	}
 
-	p.Project = project
+	context.Project = project
 
 	searchTerm := r.FormValue("search_term")
 	if searchTerm != "" {
 		imageURLs, err := context.imageSource.Search(searchTerm)
 
 		// save image URLs to disk so we can use them to render mosaic, if/when the user clicks "generate"
-		p.Project.ToFile(imageURLs)
+		context.Project.ToFile(imageURLs)
 
-		filePaths, err := gochallenge3.Download(imageURLs, p.Project.ThumbnailsDir())
+		filePaths, err := gochallenge3.Download(imageURLs, context.Project.ThumbnailsDir())
 		for _, filePath := range filePaths {
 			gochallenge3.CommonLog.Printf("filePath: %s\n", filePath)
 		}
 		if err != nil {
-			return http.StatusInternalServerError, fmt.Errorf("error searching for images: %v\n", err)
+			return http.StatusInternalServerError, "search.html", fmt.Errorf("error searching for images: %v\n", err)
 		}
-		p.SearchResultRows = gochallenge3.ToRows(5, imageURLs)
+		context.SearchResultRows = gochallenge3.ToRows(5, imageURLs)
 	}
 
-	renderTemplate(w, "search.html", p)
-
-	return http.StatusOK, nil
+	return http.StatusOK, "search.html", nil
 }
 
 func chooseFileHandler(w http.ResponseWriter, r *http.Request) {
@@ -92,25 +90,23 @@ func chooseFileHandler(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, "choose.html", p)
 }
 
-func resultsHandler(context *appContext, w http.ResponseWriter, r *http.Request) (int, error) {
+func resultsHandler(context *appContext, w http.ResponseWriter, r *http.Request) (int, string, error) {
 	context.Title = "Mosaic Results"
 
 	parts := gochallenge3.SplitPath(r.URL.Path)
 	if len(parts) != 2 {
-		return http.StatusBadRequest, errors.New("upload_id_missing")
+		return http.StatusBadRequest, "results.html", errors.New("upload_id_missing")
 	}
 
 	projectID := parts[1]
 	project, err := gochallenge3.ReadProject(uploadRootDir, projectID)
 	if err != nil {
-//		renderTemplate(w, "results.html", context)
-		return http.StatusBadRequest, err
+		return http.StatusBadRequest, "results.html", err
 	}
 
 	context.Project = project
 
-	renderTemplate(w, "results.html", context)
-	return http.StatusOK, nil
+	return http.StatusOK, "results.html", nil
 }
 
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
@@ -209,29 +205,14 @@ func downloadMosaicHandler(w http.ResponseWriter, r *http.Request) {
 
 // implement http.Handler
 func (ah appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if status, err := ah.h(ah.appContext, w, r); err != nil {
+	status, template, err := ah.h(ah.appContext, w, r)
+
+	if err != nil {
 		gochallenge3.CommonLog.Println(err)
-
-		switch status {
-			// We can have cases as granular as we like, if we wanted to
-			// return custom errors for specific status codes.
-			case http.StatusNotFound:
-  			    http.NotFound(w, r)
-			    renderTemplate(w, "404.html", ah.appContext)
-
-			case http.StatusBadRequest:
-  			    http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-
-			case http.StatusInternalServerError:
-			    http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			    renderTemplate(w, "500.html", ah.appContext)
-
-			default:
-			    // Catch any other errors we haven't explicitly handled
-			   http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			   renderTemplate(w, "500.html", ah.appContext)
-		}
+		w.WriteHeader(status)
 	}
+
+	renderTemplate(w, template, ah.appContext)
 }
 
 
