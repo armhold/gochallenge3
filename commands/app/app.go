@@ -35,8 +35,8 @@ type appHandler struct {
 
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
-	p := &appContext{Title: "Welcome"}
-	renderTemplate(w, "welcome.html", p)
+	context := &appContext{Title: "Welcome"}
+	renderTemplate(w, "welcome.html", context)
 }
 
 func init() {
@@ -86,8 +86,8 @@ func searchHandler(context *appContext, w http.ResponseWriter, r *http.Request) 
 }
 
 func chooseFileHandler(w http.ResponseWriter, r *http.Request) {
-	p := &appContext{Title: "Image Upload"}
-	renderTemplate(w, "choose.html", p)
+	context := &appContext{Title: "Image Upload"}
+	renderTemplate(w, "choose.html", context)
 }
 
 func resultsHandler(context *appContext, w http.ResponseWriter, r *http.Request) (int, string, error) {
@@ -110,16 +110,16 @@ func resultsHandler(context *appContext, w http.ResponseWriter, r *http.Request)
 }
 
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
-	p := &appContext{Title: "Receive Upload"}
+	context := &appContext{Title: "Receive Upload"}
 
 	project, err := createProject(r)
 
 	if err != nil {
 		gochallenge3.CommonLog.Println(err)
-		p.Error = err
-		renderTemplate(w, "choose.html", p)
+		context.Error = err
+		renderTemplate(w, "choose.html", context)
 	} else {
-		p.Project = project
+		context.Project = project
 
 		redirectTo := fmt.Sprintf("/search/%s", filepath.Base(project.ID))
 
@@ -145,14 +145,14 @@ func createProject(r *http.Request) (*gochallenge3.Project, error) {
 }
 
 func generateMosaicHandler(w http.ResponseWriter, r *http.Request) {
-	p := &appContext{Title: "Generate Mosaic"}
+	context := &appContext{Title: "Generate Mosaic"}
 
 	project, err := generateMosaic(w, r)
 	if err != nil {
 		gochallenge3.CommonLog.Println(err)
-		p.Error = err
+		context.Error = err
 	}
-	p.Project = project
+	context.Project = project
 
 	http.Redirect(w, r, fmt.Sprintf("/results/%s", filepath.Base(project.ID)), http.StatusFound)
 }
