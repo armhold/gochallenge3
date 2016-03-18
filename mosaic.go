@@ -105,27 +105,27 @@ func (m *Mosaic) Generate(infile, outfile string) error {
 }
 
 func (m *Mosaic) bestMatch(img image.Image) *Tile {
-    bestDiff := uint32(math.MaxUint32)
+	bestDiff := uint32(math.MaxUint32)
 	CommonLog.Printf("m.Tiles len: %d", len(m.Tiles))
 	bestIndex := 0
-    bestTile := m.Tiles[bestIndex]
+	bestTile := m.Tiles[bestIndex]
 
 	CommonLog.Printf("bestMatch img bounds: %v", img.Bounds())
 
-    imgAvgColor := ComputeAverageColor(img)
+	imgAvgColor := ComputeAverageColor(img)
 
-    for i, tile := range m.Tiles {
-        diff := colorDiff(imgAvgColor, tile.AverageColor)
-        if diff <= bestDiff {
-            bestDiff = diff
-            bestTile = tile
+	for i, tile := range m.Tiles {
+		diff := colorDiff(imgAvgColor, tile.AverageColor)
+		if diff <= bestDiff {
+			bestDiff = diff
+			bestTile = tile
 			bestIndex = i
-        }
-    }
+		}
+	}
 
 	CommonLog.Printf("best tile index: %d, colorDiff: %f, color: %v", bestIndex, bestDiff, bestTile.AverageColor)
 
-    return bestTile
+	return bestTile
 }
 
 

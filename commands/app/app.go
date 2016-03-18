@@ -8,11 +8,14 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"flag"
+	"log"
 )
 
 var (
 	templates     map[string]*template.Template
 	uploadRootDir string
+	devMode bool
 )
 
 type appContext struct {
@@ -40,6 +43,9 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func init() {
+	flag.BoolVar(&devMode, "dev", false, "start the server in devmode")
+	flag.Parse()
+
 	templates = make(map[string]*template.Template)
 	templates["welcome.html"]   = template.Must(template.ParseFiles("../../templates/welcome.html",   "../../templates/layout.html"))
 	templates["search.html"]    = template.Must(template.ParseFiles("../../templates/search.html",    "../../templates/layout.html"))
@@ -47,6 +53,7 @@ func init() {
 	templates["results.html"]   = template.Must(template.ParseFiles("../../templates/results.html",   "../../templates/layout.html"))
 	templates["404.html"]       = template.Must(template.ParseFiles("../../templates/404.html",       "../../templates/layout.html"))
 	templates["500.html"]       = template.Must(template.ParseFiles("../../templates/500.html",       "../../templates/layout.html"))
+	template.ParseGlob("../../*.html")
 }
 
 func searchHandler(context *appContext, w http.ResponseWriter, r *http.Request) (int, string, error) {
@@ -247,7 +254,18 @@ func main() {
 		port = "8080"
 	}
 	fmt.Printf("using port: %s\n", port)
-	http.ListenAndServe(":"+port, nil)
+
+	addr := ":" + port
+	log.Printf("devMode: %t", devMode)
+
+	if devMode {
+		// prevent OSX firewall popups by binding to localhost
+		//
+		// see: http://grokbase.com/t/gg/golang-nuts/15322dedhn/go-nuts-mac-firewall
+		addr = "localhost" + addr
+	}
+
+	http.ListenAndServe(addr, nil)
 }
 
 func renderTemplate(w http.ResponseWriter, templatePath string, context *appContext) {
