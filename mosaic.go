@@ -1,13 +1,13 @@
 package gochallenge3
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
 	"log"
 	"math"
 	"os"
-	"fmt"
 )
 
 type Mosaic struct {
@@ -18,8 +18,8 @@ type Mosaic struct {
 
 func NewMosaic(tileW, tileH int, tileImageFiles []string) Mosaic {
 	return Mosaic{
-		TileW:  tileW,
-		TileH:  tileH,
+		TileW:          tileW,
+		TileH:          tileH,
 		tileImageFiles: tileImageFiles,
 	}
 }
@@ -96,7 +96,6 @@ func (m *Mosaic) Generate(sourceImageFile, outfile string, widthMult, heightMult
 	return SavePng(targetImg, outfile)
 }
 
-
 func (m *Mosaic) createTiles(tileRect image.Rectangle) ([]*Tile, error) {
 	var result []*Tile
 
@@ -105,15 +104,13 @@ func (m *Mosaic) createTiles(tileRect image.Rectangle) ([]*Tile, error) {
 
 		tile, err := NewTile(file, tileRect)
 		if err != nil {
-                        return nil, fmt.Errorf("error creating tile from source image: %s", err)
+			return nil, fmt.Errorf("error creating tile from source image: %s", err)
 		}
 		result = append(result, tile)
 	}
 
 	return result, nil
 }
-
-
 
 func bestMatch(tiles []*Tile, img image.Image) *Tile {
 	bestDiff := uint32(math.MaxUint32)

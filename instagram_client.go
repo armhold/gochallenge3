@@ -57,7 +57,7 @@ func (i *InstagramClient) searchPaginated(instagramURL string) (imageURLs []Imag
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, "", errors.New(fmt.Sprintf("image fetch failed: %v", resp.StatusCode))
+		return nil, "", errors.New(fmt.Sprintf("image search failed, http error: %v", resp.StatusCode))
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
