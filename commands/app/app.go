@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/armhold/gochallenge3"
-	"os"
 	"flag"
+	"github.com/armhold/gochallenge3"
 	"log"
+	"os"
 )
 
 var (
@@ -27,7 +27,6 @@ func main() {
 	if err := os.MkdirAll(uploadRootDir, 0700); err != nil {
 		log.Fatalf("unable to create temp dir %s: %s", uploadRootDir, err)
 	}
-
 
 	port := os.Getenv("PORT")
 	if port == "" {
