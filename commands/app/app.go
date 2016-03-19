@@ -46,6 +46,14 @@ func init() {
 	flag.BoolVar(&devMode, "dev", false, "start the server in devmode")
 	flag.Parse()
 
+	uploadRootDir = os.Getenv("UPLOAD_DIR")
+	if uploadRootDir == "" {
+		uploadRootDir = "/tmp/upload_dir"
+	}
+	if err := os.MkdirAll(uploadRootDir, 0700) ; err != nil {
+		log.Fatalf("unable to create temp dir %s: %s", uploadRootDir, err)
+	}
+
 	templates = make(map[string]*template.Template)
 	templates["welcome.html"]   = template.Must(template.ParseFiles("../../templates/welcome.html",   "../../templates/layout.html"))
 	templates["search.html"]    = template.Must(template.ParseFiles("../../templates/search.html",    "../../templates/layout.html"))
