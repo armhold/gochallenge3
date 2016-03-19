@@ -9,6 +9,7 @@ import (
 	"path"
 	"bufio"
 	"path/filepath"
+	"log"
 )
 
 // Project represents a mosaic project- the uploaded file, selected tile images, and resulting mosaic image
@@ -55,7 +56,7 @@ func NewProject(uploadRootDir string) (*Project, error) {
 }
 
 func (p *Project) ReceiveUpload(r io.Reader) error {
-	CommonLog.Printf("ReceiveUpload to: %s", p.UploadedImageFile())
+	log.Printf("ReceiveUpload to: %s", p.UploadedImageFile())
 
 	out, err := os.Create(p.UploadedImageFile())
 	if err != nil {
@@ -68,7 +69,7 @@ func (p *Project) ReceiveUpload(r io.Reader) error {
 		return err
 	}
 
-	CommonLog.Printf("Image successfully uploaded to %s", p.UploadedImageFile())
+	log.Printf("Image successfully uploaded to %s", p.UploadedImageFile())
 
 	return nil
 }

@@ -3,10 +3,10 @@ package gochallenge3
 import (
 	"image"
 	"image/color"
+	"log"
 	"math"
 	"os"
     "image/draw"
-//	"fmt"
 )
 
 type Mosaic struct {
@@ -47,7 +47,7 @@ func (m *Mosaic) Generate(infile, outfile string) error {
 	tileRect := image.Rect(0, 0, m.TileW, m.TileH)
 
 	for i, file := range m.thumbs {
-		CommonLog.Printf("loading tile: %s", file)
+		log.Printf("loading tile: %s", file)
 
 		tile, err := NewTile(file, tileRect)
 		m.Tiles[i] = tile
@@ -59,7 +59,7 @@ func (m *Mosaic) Generate(infile, outfile string) error {
 	cols := targetImg.Bounds().Dx() / m.TileW
 	rows := targetImg.Bounds().Dy() / m.TileH
 
-	CommonLog.Printf("targetImg.Bounds().Dx(): %d, targetImg.Bounds().Dy(): %d, rows: %d, cols: %d, W: %d, H: %d", targetImg.Bounds().Dx(), targetImg.Bounds().Dy(), rows, cols, m.OutputW, m.OutputH)
+	log.Printf("targetImg.Bounds().Dx(): %d, targetImg.Bounds().Dy(): %d, rows: %d, cols: %d, W: %d, H: %d", targetImg.Bounds().Dx(), targetImg.Bounds().Dy(), rows, cols, m.OutputW, m.OutputH)
 
 
 	for row := 0; row < rows; row++ {
@@ -72,11 +72,11 @@ func (m *Mosaic) Generate(infile, outfile string) error {
 			y1 := y0 + m.TileH
 
 			gridRect := image.Rect(x0, y0, x1, y1)
-			CommonLog.Printf("processing grid: %d, %d, bounds: %v", row, col, gridRect)
+			log.Printf("processing grid: %d, %d, bounds: %v", row, col, gridRect)
 
 			intR := gridImg.Bounds().Intersect(gridRect)
-			CommonLog.Printf("gridImg.Bounds(): %v", gridImg.Bounds())
-			CommonLog.Printf("intersection: %v", intR)
+			log.Printf("gridImg.Bounds(): %v", gridImg.Bounds())
+			log.Printf("intersection: %v", intR)
 
 			subImg := gridImg.(interface {
 				SubImage(r image.Rectangle) image.Image
@@ -94,7 +94,7 @@ func (m *Mosaic) Generate(infile, outfile string) error {
 
             tile := m.bestMatch(subImg)
 
-			CommonLog.Printf("tile bounds: %v", tile.ScaledImage.Bounds())
+			log.Printf("tile bounds: %v", tile.ScaledImage.Bounds())
 
 
             draw.Draw(targetImg, gridRect, tile.ScaledImage, tile.ScaledImage.Bounds().Min, draw.Src)
@@ -106,11 +106,11 @@ func (m *Mosaic) Generate(infile, outfile string) error {
 
 func (m *Mosaic) bestMatch(img image.Image) *Tile {
 	bestDiff := uint32(math.MaxUint32)
-	CommonLog.Printf("m.Tiles len: %d", len(m.Tiles))
+	log.Printf("m.Tiles len: %d", len(m.Tiles))
 	bestIndex := 0
 	bestTile := m.Tiles[bestIndex]
 
-	CommonLog.Printf("bestMatch img bounds: %v", img.Bounds())
+	log.Printf("bestMatch img bounds: %v", img.Bounds())
 
 	imgAvgColor := ComputeAverageColor(img)
 
@@ -123,7 +123,7 @@ func (m *Mosaic) bestMatch(img image.Image) *Tile {
 		}
 	}
 
-	CommonLog.Printf("best tile index: %d, colorDiff: %f, color: %v", bestIndex, bestDiff, bestTile.AverageColor)
+	log.Printf("best tile index: %d, colorDiff: %f, color: %v", bestIndex, bestDiff, bestTile.AverageColor)
 
 	return bestTile
 }

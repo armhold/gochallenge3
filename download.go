@@ -5,13 +5,14 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"log"
 )
 
 func Download(urls []ImageURL, downloadDir string) ([]string, error) {
 	var filePaths = make([]string, len(urls))
 
 	for i, url := range urls {
-		CommonLog.Printf("download [%d] => \"%s\"", i, url)
+		log.Printf("download [%d] => \"%s\"", i, url)
 
 		filePaths[i] = fmt.Sprintf("%s/thumb.%d", downloadDir, i)
 
@@ -19,7 +20,7 @@ func Download(urls []ImageURL, downloadDir string) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		CommonLog.Printf("downloaded %s to %s\n", url, filePaths[i])
+		log.Printf("downloaded %s to %s\n", url, filePaths[i])
 	}
 
 	return filePaths, nil

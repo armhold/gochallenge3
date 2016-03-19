@@ -29,13 +29,10 @@ type appContext struct {
 	Project          *gochallenge3.Project
 }
 
-
 type appHandler struct {
 	*appContext
 	h func(*appContext, http.ResponseWriter, *http.Request) (status int, template string, error error)
 }
-
-
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	context := &appContext{Title: "Welcome"}
@@ -43,6 +40,8 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func init() {
+	log.SetFlags(log.LstdFlags|log.Lshortfile)
+
 	flag.BoolVar(&devMode, "dev", false, "start the server in devmode")
 	flag.Parse()
 
@@ -61,6 +60,7 @@ func init() {
 	templates["results.html"]   = template.Must(template.ParseFiles("./templates/results.html",   "./templates/layout.html"))
 	templates["404.html"]       = template.Must(template.ParseFiles("./templates/404.html",       "./templates/layout.html"))
 	templates["500.html"]       = template.Must(template.ParseFiles("./templates/500.html",       "./templates/layout.html"))
+//	template.ParseGlob("./templates/*.html")
 }
 
 func searchHandler(context *appContext, w http.ResponseWriter, r *http.Request) (int, string, error) {
@@ -88,8 +88,9 @@ func searchHandler(context *appContext, w http.ResponseWriter, r *http.Request) 
 
 		filePaths, err := gochallenge3.Download(imageURLs, context.Project.ThumbnailsDir())
 		for _, filePath := range filePaths {
-			gochallenge3.CommonLog.Printf("filePath: %s\n", filePath)
+			log.Printf("filePath: %s\n", filePath)
 		}
+
 		if err != nil {
 			return http.StatusInternalServerError, "search.html", fmt.Errorf("error searching for images: %v\n", err)
 		}
@@ -129,7 +130,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	project, err := createProject(r)
 
 	if err != nil {
-		gochallenge3.CommonLog.Println(err)
+		log.Println(err)
 		context.Error = err
 		renderTemplate(w, "choose.html", context)
 	} else {
@@ -137,7 +138,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 
 		redirectTo := fmt.Sprintf("/search/%s", filepath.Base(project.ID))
 
-		gochallenge3.CommonLog.Printf("redirect to %s", redirectTo)
+		log.Printf("redirect to %s", redirectTo)
 		http.Redirect(w, r, redirectTo, http.StatusFound)
 	}
 }
@@ -163,7 +164,7 @@ func generateMosaicHandler(w http.ResponseWriter, r *http.Request) {
 
 	project, err := generateMosaic(w, r)
 	if err != nil {
-		gochallenge3.CommonLog.Println(err)
+		log.Println(err)
 		context.Error = err
 	}
 	context.Project = project
@@ -201,7 +202,7 @@ func downloadMosaicHandler(w http.ResponseWriter, r *http.Request) {
 	parts := gochallenge3.SplitPath(r.URL.Path)
 	if len(parts) != 2 {
 		err := "upload_id missing"
-		gochallenge3.CommonLog.Println(err)
+		log.Println(err)
 		http.Error(w, err, http.StatusBadRequest)
 		return
 	}
@@ -209,7 +210,7 @@ func downloadMosaicHandler(w http.ResponseWriter, r *http.Request) {
 	projectID := parts[1]
 	project, err := gochallenge3.ReadProject(uploadRootDir, projectID)
 	if err != nil {
-		gochallenge3.CommonLog.Println(err)
+		log.Println(err)
 		http.NotFound(w, r)
 		return
 	}
@@ -222,7 +223,7 @@ func (ah appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	status, template, err := ah.h(ah.appContext, w, r)
 
 	if err != nil {
-		gochallenge3.CommonLog.Println(err)
+		log.Println(err)
 		w.WriteHeader(status)
 	}
 
@@ -238,7 +239,7 @@ func main() {
 	}
 
 	http.HandleFunc("/", homeHandler)
-	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("../../public"))))
+	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("./public"))))
 
 	instagramClientID := os.Getenv("INSTAGRAM_CLIENT_ID")
 	if instagramClientID == "" {
@@ -278,7 +279,7 @@ func main() {
 func renderTemplate(w http.ResponseWriter, templatePath string, context *appContext) {
 	err := templates[templatePath].ExecuteTemplate(w, "layout", context)
 	if err != nil {
-		gochallenge3.CommonLog.Println(err)
+		log.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }

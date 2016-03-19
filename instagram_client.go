@@ -37,7 +37,7 @@ func (i *InstagramImageSource) Search(s string) ([]ImageURL, error) {
 	var result []ImageURL
 
 	for instagramURL != "" && len(result) < maxResults {
-		CommonLog.Printf("searching URL: %s", instagramURL)
+		log.Printf("searching URL: %s", instagramURL)
 
 		imageURLs, nextURL, err := i.searchPaginated(instagramURL)
 		if err != nil {
