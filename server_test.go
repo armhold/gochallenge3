@@ -1,4 +1,4 @@
-package main
+package gochallenge3
 
 import (
 	"net/http"
@@ -21,9 +21,7 @@ func TestInvalid_upload_id(t *testing.T) {
 
 	expected := http.StatusBadRequest
 
-	context := appContext{}
-	ah := appHandler{&context, resultsHandler}
-	ah.ServeHTTP(w, req)
+	resultsHandler(w, req)
 
 	if w.Code !=  expected {
 		t.Errorf("results page expected %v, got %v", expected, w.Code)

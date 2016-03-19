@@ -83,7 +83,7 @@ func (p *Project) ImageUrlsFile() string {
 }
 
 func (p *Project) UploadedImageFile() string {
-	fmt.Printf("UploadedImageFile: %s, %s, %s", p.uploadRootDir, p.ID, "uploaded_image")
+	log.Printf("UploadedImageFile: %s, %s, %s", p.uploadRootDir, p.ID, "uploaded_image")
 
 	return path.Join(p.uploadRootDir, p.ID, "uploaded_image")
 }
