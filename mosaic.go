@@ -85,7 +85,7 @@ func (m *Mosaic) Generate(sourceImageFile, outfile string, widthMult, heightMult
 				continue
 			}
 
-			tile := m.bestMatch(tiles, subImg)
+			tile := bestMatch(tiles, subImg)
 
 			log.Printf("tile bounds: %v", tile.ScaledImage.Bounds())
 
@@ -115,7 +115,7 @@ func (m *Mosaic) createTiles(tileRect image.Rectangle) ([]*Tile, error) {
 
 
 
-func (m *Mosaic) bestMatch(tiles []*Tile, img image.Image) *Tile {
+func bestMatch(tiles []*Tile, img image.Image) *Tile {
 	bestDiff := uint32(math.MaxUint32)
 	log.Printf("m.Tiles len: %d", len(tiles))
 	bestIndex := 0
