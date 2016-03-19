@@ -8,9 +8,10 @@ import (
 	"os"
 )
 
+// Tile is an image scaled to fit a given rectangle, along with its computed average color.
 type Tile struct {
-	AverageColor color.RGBA
 	ScaledImage  image.Image
+	AverageColor color.RGBA
 }
 
 func (t *Tile) GoString() string {
@@ -18,8 +19,8 @@ func (t *Tile) GoString() string {
 	return fmt.Sprintf("Tile: AverageColor: r: %d, g: %d, b: %d, a: %d", r, g, b, a)
 }
 
-func NewTile(filePath string, r image.Rectangle) (*Tile, error) {
-	srcFile, err := os.Open(filePath)
+func NewTile(sourceImageFile string, r image.Rectangle) (*Tile, error) {
+	srcFile, err := os.Open(sourceImageFile)
 	if err != nil {
 		return nil, err
 	}

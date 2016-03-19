@@ -7,29 +7,25 @@ import (
 	"log"
 	"math"
 	"os"
+	"fmt"
 )
 
 type Mosaic struct {
-	OutputW int
-	OutputH int
-	TileW   int
-	TileH   int
-	thumbs  []string
-	Tiles   []*Tile
+	TileW          int
+	TileH          int
+	tileImageFiles []string
 }
 
-func NewMosaic(tileW, tileH int, thumbs []string) Mosaic {
+func NewMosaic(tileW, tileH int, tileImageFiles []string) Mosaic {
 	return Mosaic{
 		TileW:  tileW,
 		TileH:  tileH,
-		thumbs: thumbs,
-		Tiles:  make([]*Tile, len(thumbs)),
+		tileImageFiles: tileImageFiles,
 	}
 }
 
-func (m *Mosaic) Generate(infile, outfile string, widthMult, heightMult int) error {
-	// read in source image
-	srcFile, err := os.Open(infile)
+func (m *Mosaic) Generate(sourceImageFile, outfile string, widthMult, heightMult int) error {
+	srcFile, err := os.Open(sourceImageFile)
 	if err != nil {
 		return err
 	}
@@ -37,27 +33,22 @@ func (m *Mosaic) Generate(infile, outfile string, widthMult, heightMult int) err
 
 	sourceImg, _, err := image.Decode(srcFile)
 	if err != nil {
-		return err
+		return fmt.Errorf("error decoding source image: %s", err)
 	}
 
 	targetImg := image.NewRGBA(image.Rect(0, 0, sourceImg.Bounds().Dx()*widthMult, sourceImg.Bounds().Dy()*heightMult))
 
 	tileRect := image.Rect(0, 0, m.TileW, m.TileH)
 
-	for i, file := range m.thumbs {
-		log.Printf("loading tile: %s", file)
-
-		tile, err := NewTile(file, tileRect)
-		m.Tiles[i] = tile
-		if err != nil {
-			return err
-		}
+	tiles, err := m.createTiles(tileRect)
+	if err != nil {
+		return err
 	}
 
 	cols := targetImg.Bounds().Dx() / m.TileW
 	rows := targetImg.Bounds().Dy() / m.TileH
 
-	log.Printf("targetImg.Bounds().Dx(): %d, targetImg.Bounds().Dy(): %d, rows: %d, cols: %d, W: %d, H: %d", targetImg.Bounds().Dx(), targetImg.Bounds().Dy(), rows, cols, m.OutputW, m.OutputH)
+	log.Printf("targetImg.Bounds().Dx(): %d, targetImg.Bounds().Dy(): %d, rows: %d, cols: %d", targetImg.Bounds().Dx(), targetImg.Bounds().Dy(), rows, cols)
 
 	for row := 0; row < rows; row++ {
 		for col := 0; col < cols; col++ {
@@ -94,7 +85,7 @@ func (m *Mosaic) Generate(infile, outfile string, widthMult, heightMult int) err
 				continue
 			}
 
-			tile := m.bestMatch(subImg)
+			tile := m.bestMatch(tiles, subImg)
 
 			log.Printf("tile bounds: %v", tile.ScaledImage.Bounds())
 
@@ -105,17 +96,36 @@ func (m *Mosaic) Generate(infile, outfile string, widthMult, heightMult int) err
 	return SavePng(targetImg, outfile)
 }
 
-func (m *Mosaic) bestMatch(img image.Image) *Tile {
+
+func (m *Mosaic) createTiles(tileRect image.Rectangle) ([]*Tile, error) {
+	var result []*Tile
+
+	for _, file := range m.tileImageFiles {
+		log.Printf("loading tile: %s", file)
+
+		tile, err := NewTile(file, tileRect)
+		if err != nil {
+                        return nil, fmt.Errorf("error creating tile from source image: %s", err)
+		}
+		result = append(result, tile)
+	}
+
+	return result, nil
+}
+
+
+
+func (m *Mosaic) bestMatch(tiles []*Tile, img image.Image) *Tile {
 	bestDiff := uint32(math.MaxUint32)
-	log.Printf("m.Tiles len: %d", len(m.Tiles))
+	log.Printf("m.Tiles len: %d", len(tiles))
 	bestIndex := 0
-	bestTile := m.Tiles[bestIndex]
+	bestTile := tiles[bestIndex]
 
 	log.Printf("bestMatch img bounds: %v", img.Bounds())
 
 	imgAvgColor := ComputeAverageColor(img)
 
-	for i, tile := range m.Tiles {
+	for i, tile := range tiles {
 		diff := colorDiff(imgAvgColor, tile.AverageColor)
 		if diff <= bestDiff {
 			bestDiff = diff
