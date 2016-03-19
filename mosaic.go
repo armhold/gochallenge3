@@ -36,13 +36,12 @@ func (m *Mosaic) Generate(infile, outfile string) error {
 	}
 	defer srcFile.Close()
 
-	gridImg, _, err := image.Decode(srcFile)
+	sourceImg, _, err := image.Decode(srcFile)
 	if err != nil {
 		return err
 	}
 
-	// create tiles from thumbnails
-	targetImg := image.NewRGBA(image.Rect(0, 0, gridImg.Bounds().Dx(), gridImg.Bounds().Dy()))
+	targetImg := image.NewRGBA(image.Rect(0, 0, sourceImg.Bounds().Dx() * 10, sourceImg.Bounds().Dy() * 10))
 
 	tileRect := image.Rect(0, 0, m.TileW, m.TileH)
 
@@ -61,7 +60,6 @@ func (m *Mosaic) Generate(infile, outfile string) error {
 
 	log.Printf("targetImg.Bounds().Dx(): %d, targetImg.Bounds().Dy(): %d, rows: %d, cols: %d, W: %d, H: %d", targetImg.Bounds().Dx(), targetImg.Bounds().Dy(), rows, cols, m.OutputW, m.OutputH)
 
-
 	for row := 0; row < rows; row++ {
 		for col := 0; col < cols; col++ {
 
@@ -71,14 +69,19 @@ func (m *Mosaic) Generate(infile, outfile string) error {
 			x1 := x0 + m.TileW
 			y1 := y0 + m.TileH
 
-			gridRect := image.Rect(x0, y0, x1, y1)
+			targetRect := image.Rect(x0, y0, x1, y1)
+
+			// map tile to source image as a percentage of points, since they are different sizes
+
+			gridX0 := int(float64(x0) / float64(targetImg.Bounds().Dx()) * float64(sourceImg.Bounds().Dx()))
+			gridY0 := int(float64(y0) / float64(targetImg.Bounds().Dy()) * float64(sourceImg.Bounds().Dy()))
+			gridX1 := int(float64(x1) / float64(targetImg.Bounds().Dx()) * float64(sourceImg.Bounds().Dx()))
+			gridY1 := int(float64(y1) / float64(targetImg.Bounds().Dy()) * float64(sourceImg.Bounds().Dy()))
+
+			gridRect := image.Rect(gridX0, gridY0, gridX1, gridY1)
 			log.Printf("processing grid: %d, %d, bounds: %v", row, col, gridRect)
 
-			intR := gridImg.Bounds().Intersect(gridRect)
-			log.Printf("gridImg.Bounds(): %v", gridImg.Bounds())
-			log.Printf("intersection: %v", intR)
-
-			subImg := gridImg.(interface {
+			subImg := sourceImg.(interface {
 				SubImage(r image.Rectangle) image.Image
 			}).SubImage(gridRect)
 
@@ -96,8 +99,7 @@ func (m *Mosaic) Generate(infile, outfile string) error {
 
 			log.Printf("tile bounds: %v", tile.ScaledImage.Bounds())
 
-
-            draw.Draw(targetImg, gridRect, tile.ScaledImage, tile.ScaledImage.Bounds().Min, draw.Src)
+            draw.Draw(targetImg, targetRect, tile.ScaledImage, tile.ScaledImage.Bounds().Min, draw.Src)
 		}
 	}
 
