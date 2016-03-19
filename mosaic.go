@@ -28,7 +28,7 @@ func NewMosaic(tileW, tileH int, thumbs []string) Mosaic {
 	}
 }
 
-func (m *Mosaic) Generate(infile, outfile string) error {
+func (m *Mosaic) Generate(infile, outfile string, widthMult, heightMult int) error {
 	// read in source image
 	srcFile, err := os.Open(infile)
 	if err != nil {
@@ -41,7 +41,7 @@ func (m *Mosaic) Generate(infile, outfile string) error {
 		return err
 	}
 
-	targetImg := image.NewRGBA(image.Rect(0, 0, sourceImg.Bounds().Dx() * 10, sourceImg.Bounds().Dy() * 10))
+	targetImg := image.NewRGBA(image.Rect(0, 0, sourceImg.Bounds().Dx() * widthMult, sourceImg.Bounds().Dy() * heightMult))
 
 	tileRect := image.Rect(0, 0, m.TileW, m.TileH)
 

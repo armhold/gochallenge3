@@ -5,7 +5,7 @@ import (
 )
 
 func TestUrl(t *testing.T) {
-	i := NewInstagramImageSource("client123")
+	i := InstagramClient{"client123"}
 
 	searchTerm := "dogs"
 	got, err := i.instagramAPIUrl(searchTerm)

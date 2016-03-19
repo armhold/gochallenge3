@@ -9,6 +9,10 @@ import (
 	"log"
 )
 
+const (
+	maxInstagramSearchImages = 100
+)
+
 var (
 	templates     map[string]*template.Template
 )
@@ -39,7 +43,7 @@ func homeHandler() (http.Handler) {
 	})
 }
 
-func searchHandler(uploadRootDir string, imageSource *InstagramImageSource) (http.Handler) {
+func searchHandler(uploadRootDir string, imageSource *InstagramClient) (http.Handler) {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		page := &Page{Title: "Search Results"}
 
@@ -70,7 +74,7 @@ func searchHandler(uploadRootDir string, imageSource *InstagramImageSource) (htt
 			return
 		}
 
-		imageURLs, err := imageSource.Search(searchTerm)
+		imageURLs, err := imageSource.Search(searchTerm, maxInstagramSearchImages)
 
 		// save image URLs to disk so we can use them to render mosaic, if/when the user clicks "generate"
 		page.Project.ToFile(imageURLs)
@@ -190,7 +194,7 @@ func generateMosaic(uploadRootDir string, r *http.Request) (*Project, error) {
 	}
 
 	m := NewMosaic(50, 50, thumbs)
-	err = m.Generate(project.UploadedImageFile(), project.GeneratedMosaicFile())
+	err = m.Generate(project.UploadedImageFile(), project.GeneratedMosaicFile(), 10, 10)
 	if err != nil {
 		return nil, err
 	}
@@ -220,7 +224,7 @@ func downloadMosaicHandler(uploadRootDir string) http.Handler {
 	})
 }
 
-func Serve(addr, uploadRootDir string, imageSource *InstagramImageSource) {
+func Serve(addr, uploadRootDir string, imageSource *InstagramClient) {
 	log.Printf("start server on: %s\n", addr)
 
 	http.Handle("/", homeHandler())

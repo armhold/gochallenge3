@@ -9,25 +9,12 @@ import (
 	"net/url"
 )
 
-var (
-	maxResults = 1000
-)
-
-
-// simple wrapper for Instagram REST API
-type ImageSource interface {
-	Search(s string) ([]ImageURL, error)
+// simple client for the Instagram Search API
+type InstagramClient struct {
+	ClientID   string
 }
 
-type InstagramImageSource struct {
-	clientID string
-}
-
-func NewInstagramImageSource(clientID string) *InstagramImageSource {
-	return &InstagramImageSource{clientID: clientID}
-}
-
-func (i *InstagramImageSource) Search(s string) ([]ImageURL, error) {
+func (i *InstagramClient) Search(s string, maxResults int) ([]ImageURL, error) {
 	log.Println("starting search...")
 	instagramURL, err := i.instagramAPIUrl(s)
 	if err != nil {
@@ -56,7 +43,7 @@ func (i *InstagramImageSource) Search(s string) ([]ImageURL, error) {
 	return result[0:maxResults], nil
 }
 
-func (i *InstagramImageSource) searchPaginated(instagramURL string) (imageURLs []ImageURL, nextUrl string, err error) {
+func (i *InstagramClient) searchPaginated(instagramURL string) (imageURLs []ImageURL, nextUrl string, err error) {
 	req, err := http.NewRequest("GET", instagramURL, nil)
 	if err != nil {
 		return nil, "", err
@@ -95,7 +82,7 @@ func (i *InstagramImageSource) searchPaginated(instagramURL string) (imageURLs [
 
 
 
-func (i *InstagramImageSource) instagramAPIUrl(searchTag string) (string, error) {
+func (i *InstagramClient) instagramAPIUrl(searchTag string) (string, error) {
 	searchTag, err := UrlEncode(searchTag)
 	if err != nil {
 		return "", err
@@ -109,7 +96,7 @@ func (i *InstagramImageSource) instagramAPIUrl(searchTag string) (string, error)
 	u.Path += "/" + searchTag
 	u.Path += "/media/recent"
 	parameters := url.Values{}
-	parameters.Add("client_id", i.clientID)
+	parameters.Add("client_id", i.ClientID)
 	parameters.Add("count", "50")
 	u.RawQuery = parameters.Encode()
 

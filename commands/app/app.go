@@ -48,8 +48,7 @@ func main() {
 		log.Fatal("environment variable INSTAGRAM_CLIENT_ID not set")
 	}
 
-	imageSource := gochallenge3.NewInstagramImageSource(instagramClientID)
-
+	imageSource := &gochallenge3.InstagramClient{instagramClientID}
 
 	gochallenge3.Serve(addr, uploadRootDir, imageSource)
 }

@@ -15,7 +15,7 @@ func TestGenerate(t *testing.T) {
     mosaic := NewMosaic(50, 50, thumbs)
     outPath := "mosaic_out.jpg"
 
-    err := mosaic.Generate("test_images/source_image.jpg", outPath)
+    err := mosaic.Generate("test_images/source_image.jpg", outPath, 1, 1)
     if err != nil {
         t.Error(err)
     }
