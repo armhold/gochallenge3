@@ -55,13 +55,12 @@ func init() {
 	}
 
 	templates = make(map[string]*template.Template)
-	templates["welcome.html"]   = template.Must(template.ParseFiles("../../templates/welcome.html",   "../../templates/layout.html"))
-	templates["search.html"]    = template.Must(template.ParseFiles("../../templates/search.html",    "../../templates/layout.html"))
-	templates["choose.html"]    = template.Must(template.ParseFiles("../../templates/choose.html",    "../../templates/layout.html"))
-	templates["results.html"]   = template.Must(template.ParseFiles("../../templates/results.html",   "../../templates/layout.html"))
-	templates["404.html"]       = template.Must(template.ParseFiles("../../templates/404.html",       "../../templates/layout.html"))
-	templates["500.html"]       = template.Must(template.ParseFiles("../../templates/500.html",       "../../templates/layout.html"))
-	template.ParseGlob("../../*.html")
+	templates["welcome.html"]   = template.Must(template.ParseFiles("./templates/welcome.html",   "./templates/layout.html"))
+	templates["search.html"]    = template.Must(template.ParseFiles("./templates/search.html",    "./templates/layout.html"))
+	templates["choose.html"]    = template.Must(template.ParseFiles("./templates/choose.html",    "./templates/layout.html"))
+	templates["results.html"]   = template.Must(template.ParseFiles("./templates/results.html",   "./templates/layout.html"))
+	templates["404.html"]       = template.Must(template.ParseFiles("./templates/404.html",       "./templates/layout.html"))
+	templates["500.html"]       = template.Must(template.ParseFiles("./templates/500.html",       "./templates/layout.html"))
 }
 
 func searchHandler(context *appContext, w http.ResponseWriter, r *http.Request) (int, string, error) {
