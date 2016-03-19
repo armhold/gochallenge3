@@ -1,15 +1,15 @@
 package gochallenge3
 
 import (
+	"bufio"
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path"
-	"bufio"
 	"path/filepath"
-	"log"
 )
 
 // Project represents a mosaic project- the uploaded file, selected tile images, and resulting mosaic image
@@ -146,4 +146,3 @@ func (p *Project) FromFile() ([]string, error) {
 
 	return result, scanner.Err()
 }
-

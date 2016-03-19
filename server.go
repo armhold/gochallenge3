@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
 	"path/filepath"
-	"log"
 )
 
 const (
@@ -14,7 +14,7 @@ const (
 )
 
 var (
-	templates     map[string]*template.Template
+	templates map[string]*template.Template
 )
 
 type Page struct {
@@ -36,14 +36,14 @@ func init() {
 	//	template.ParseGlob("./templates/*.html")
 }
 
-func homeHandler() (http.Handler) {
+func homeHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		context := &Page{Title: "Welcome"}
 		renderTemplate(w, "welcome.html", context)
 	})
 }
 
-func searchHandler(uploadRootDir string, imageSource *InstagramClient) (http.Handler) {
+func searchHandler(uploadRootDir string, imageSource *InstagramClient) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		page := &Page{Title: "Search Results"}
 
@@ -96,16 +96,16 @@ func searchHandler(uploadRootDir string, imageSource *InstagramClient) (http.Han
 	})
 }
 
-func chooseFileHandler() (http.Handler) {
+func chooseFileHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		context := &Page{Title: "Image Upload"}
 		renderTemplate(w, "choose.html", context)
 	})
 }
 
-func resultsHandler(uploadRootDir string) (http.Handler) {
+func resultsHandler(uploadRootDir string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		page := &Page{Title:"Mosaic Results"}
+		page := &Page{Title: "Mosaic Results"}
 
 		parts := SplitPath(r.URL.Path)
 		if len(parts) != 2 {
@@ -131,7 +131,7 @@ func resultsHandler(uploadRootDir string) (http.Handler) {
 	})
 }
 
-func uploadHandler(uploadRootDir string) (http.Handler) {
+func uploadHandler(uploadRootDir string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		project, err := createProject(uploadRootDir, r)
 
@@ -163,7 +163,7 @@ func createProject(uploadRootDir string, r *http.Request) (*Project, error) {
 	return project, project.ReceiveUpload(file)
 }
 
-func generateMosaicHandler(uploadRootDir string) (http.Handler) {
+func generateMosaicHandler(uploadRootDir string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		project, err := generateMosaic(uploadRootDir, r)
 		if err != nil {
@@ -250,4 +250,3 @@ func renderTemplate(w http.ResponseWriter, templatePath string, page *Page) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
-

@@ -11,7 +11,7 @@ import (
 
 // simple client for the Instagram Search API
 type InstagramClient struct {
-	ClientID   string
+	ClientID string
 }
 
 func (i *InstagramClient) Search(s string, maxResults int) ([]ImageURL, error) {
@@ -79,8 +79,6 @@ func (i *InstagramClient) searchPaginated(instagramURL string) (imageURLs []Imag
 
 	return imageURLs, got.Pagination.NextURL, nil
 }
-
-
 
 func (i *InstagramClient) instagramAPIUrl(searchTag string) (string, error) {
 	searchTag, err := UrlEncode(searchTag)

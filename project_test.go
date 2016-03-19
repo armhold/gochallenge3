@@ -1,8 +1,8 @@
 package gochallenge3
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 )
 
 func TestReadNonExistant(t *testing.T) {
@@ -12,7 +12,6 @@ func TestReadNonExistant(t *testing.T) {
 		t.Errorf("expected error for non-existant project ID")
 	}
 }
-
 
 func TestSerialize(t *testing.T) {
 	imageURLs := make([]ImageURL, 5)

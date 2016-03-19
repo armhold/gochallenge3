@@ -3,9 +3,9 @@ package gochallenge3
 import (
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
-	"log"
 )
 
 func Download(urls []ImageURL, downloadDir string) ([]string, error) {
@@ -26,7 +26,7 @@ func Download(urls []ImageURL, downloadDir string) ([]string, error) {
 	return filePaths, nil
 }
 
-func downloadToFile(url, toFile string) (error) {
+func downloadToFile(url, toFile string) error {
 	response, err := http.Get(string(url))
 	if err != nil {
 		return fmt.Errorf("error while downloading %s: %s", url, err)

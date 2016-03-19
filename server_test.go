@@ -3,8 +3,8 @@ package gochallenge3
 import (
 	"net/http"
 	"net/http/httptest"
-	"testing"
 	"os"
+	"testing"
 )
 
 func TestHomeHandler(t *testing.T) {

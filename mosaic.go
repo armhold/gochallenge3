@@ -3,28 +3,27 @@ package gochallenge3
 import (
 	"image"
 	"image/color"
+	"image/draw"
 	"log"
 	"math"
 	"os"
-    "image/draw"
 )
 
 type Mosaic struct {
-    OutputW      int
-    OutputH      int
-	TileW        int
-	TileH        int
-    thumbs       []string
-    Tiles        []*Tile
+	OutputW int
+	OutputH int
+	TileW   int
+	TileH   int
+	thumbs  []string
+	Tiles   []*Tile
 }
-
 
 func NewMosaic(tileW, tileH int, thumbs []string) Mosaic {
 	return Mosaic{
-		TileW: tileW,
-		TileH: tileH,
+		TileW:  tileW,
+		TileH:  tileH,
 		thumbs: thumbs,
-		Tiles: make([]*Tile, len(thumbs)),
+		Tiles:  make([]*Tile, len(thumbs)),
 	}
 }
 
@@ -41,7 +40,7 @@ func (m *Mosaic) Generate(infile, outfile string, widthMult, heightMult int) err
 		return err
 	}
 
-	targetImg := image.NewRGBA(image.Rect(0, 0, sourceImg.Bounds().Dx() * widthMult, sourceImg.Bounds().Dy() * heightMult))
+	targetImg := image.NewRGBA(image.Rect(0, 0, sourceImg.Bounds().Dx()*widthMult, sourceImg.Bounds().Dy()*heightMult))
 
 	tileRect := image.Rect(0, 0, m.TileW, m.TileH)
 
@@ -86,24 +85,24 @@ func (m *Mosaic) Generate(infile, outfile string, widthMult, heightMult int) err
 			}).SubImage(gridRect)
 
 			if subImg.Bounds().Dx() == 0 {
-//				panic(fmt.Errorf("rows: %d, cols: %d, row: %d, col: %d, subImg.Bounds() == %v, gridRect = %v", rows, cols, row, col, subImg.Bounds(), gridRect))
+				//				panic(fmt.Errorf("rows: %d, cols: %d, row: %d, col: %d, subImg.Bounds() == %v, gridRect = %v", rows, cols, row, col, subImg.Bounds(), gridRect))
 				continue
 			}
 
 			if subImg.Bounds().Dy() == 0 {
-//				panic(fmt.Errorf("subImg.Bounds().Dy() == %d, gridRect = %v", subImg.Bounds().Dy(), gridRect))
+				//				panic(fmt.Errorf("subImg.Bounds().Dy() == %d, gridRect = %v", subImg.Bounds().Dy(), gridRect))
 				continue
 			}
 
-            tile := m.bestMatch(subImg)
+			tile := m.bestMatch(subImg)
 
 			log.Printf("tile bounds: %v", tile.ScaledImage.Bounds())
 
-            draw.Draw(targetImg, targetRect, tile.ScaledImage, tile.ScaledImage.Bounds().Min, draw.Src)
+			draw.Draw(targetImg, targetRect, tile.ScaledImage, tile.ScaledImage.Bounds().Min, draw.Src)
 		}
 	}
 
-    return SavePng(targetImg, outfile)
+	return SavePng(targetImg, outfile)
 }
 
 func (m *Mosaic) bestMatch(img image.Image) *Tile {
@@ -130,17 +129,16 @@ func (m *Mosaic) bestMatch(img image.Image) *Tile {
 	return bestTile
 }
 
-
 // borrowed from func (p Palette) Index(c Color) int
 //
 func colorDiff(c1, c2 color.RGBA) uint32 {
-	delta := int32(c1.R) - int32(c2.R) >> 1
+	delta := int32(c1.R) - int32(c2.R)>>1
 	ssd := uint32(delta * delta)
 
-	delta = int32(c1.G) - int32(c2.G) >> 1
+	delta = int32(c1.G) - int32(c2.G)>>1
 	ssd += uint32(delta * delta)
 
-	delta = int32(c1.B) - int32(c2.B) >> 1
+	delta = int32(c1.B) - int32(c2.B)>>1
 	ssd += uint32(delta * delta)
 
 	return ssd
