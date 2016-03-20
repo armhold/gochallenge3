@@ -1,6 +1,21 @@
 package gochallenge3
 
+import (
+	"regexp"
+	"strings"
+	"fmt"
+)
+
 type ImageURL string
+
+var (
+	imageExtensionRegexp *regexp.Regexp
+)
+
+func init() {
+	imageExtensionRegexp = regexp.MustCompile(`http.*(\.gif|\.jpg|\.png)\?.*`)
+}
+
 
 func ToRows(rowLen int, imageURLs []ImageURL) [][]ImageURL {
 	i := 0
@@ -18,4 +33,14 @@ func ToRows(rowLen int, imageURLs []ImageURL) [][]ImageURL {
 	}
 
 	return result
+}
+
+func (i ImageURL) guessImageExtension() (string, error) {
+	lower := strings.ToLower(string(i))
+	match := imageExtensionRegexp.FindStringSubmatch(lower)
+	if len(match) == 2 {
+		return match[1], nil
+	}
+
+	return "", fmt.Errorf("failed to guess image extension: %s", i)
 }

@@ -14,9 +14,14 @@ func Download(urls []ImageURL, downloadDir string) ([]string, error) {
 	for i, url := range urls {
 		log.Printf("download [%d] => \"%s\"", i, url)
 
-		filePaths[i] = fmt.Sprintf("%s/thumb.%d", downloadDir, i)
+		ext, err := url.guessImageExtension()
+		if err != nil {
+			return nil, err
+		}
 
-		err := downloadToFile(string(url), filePaths[i])
+		filePaths[i] = fmt.Sprintf("%s/thumb%d%s", downloadDir, i, ext)
+
+		err = downloadToFile(string(url), filePaths[i])
 		if err != nil {
 			return nil, err
 		}
