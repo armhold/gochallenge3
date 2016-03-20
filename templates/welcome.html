@@ -1,20 +1,25 @@
 {{ define "content" }}
 <div>
-
     <h1>{{.Title}}</h1>
 
+    <h2 class="sub-header">Choose an image and a search term</h2>
 
-    <form action="/search">
-        <label>Enter a search term:
-            <input name="search_term">
-        </label>
-        <br>
-        <br>
+    <div class="table-responsive">
 
-        <input type="submit" value="Search">
+        <div>
+            <form class="form-inline" action="/upload" method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="file">Filename:</label>
+                    <input type="file" name="file" id="file">
 
-    </form>
+                    <label for="search_term">Search Term (e.g. "sunset"):</label>
+                    <input name="search_term" id="search_term">
+                </div>
+                <button type="submit" class="btn btn-default" autofocus>Submit</button>
+            </form>
 
+        </div>
+    </div>
 
 </div>
 {{ end }}
