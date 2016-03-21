@@ -82,7 +82,6 @@ func uploadHandler(uploadRootDir string, imageSource *InstagramClient) http.Hand
 		}
 
 		project, err := createProject(uploadRootDir, r)
-
 		if err != nil {
 			handleErr(err)
 			return
@@ -167,6 +166,29 @@ func downloadMosaicHandler(uploadRootDir string) http.Handler {
 	})
 }
 
+// TODO
+func jobStatusHandler(uploadRootDir string) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		parts := SplitPath(r.URL.Path)
+		if len(parts) != 2 {
+			err := "upload_id missing"
+			log.Println(err)
+			http.Error(w, err, http.StatusBadRequest)
+			return
+		}
+
+		projectID := parts[1]
+		project, err := ReadProject(uploadRootDir, projectID)
+		if err != nil {
+			log.Println(err)
+			http.NotFound(w, r)
+			return
+		}
+
+		log.Printf("jobStatus: %s: %s", project.ID, project.Status)
+	})
+}
+
 func Serve(addr, uploadRootDir string, imageSource *InstagramClient) {
 	log.Printf("start server on: %s\n", addr)
 
@@ -174,6 +196,7 @@ func Serve(addr, uploadRootDir string, imageSource *InstagramClient) {
 	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("./public"))))
 	http.Handle("/upload", uploadHandler(uploadRootDir, imageSource))
 	http.Handle("/results/", resultsHandler(uploadRootDir))
+	http.Handle("/status/", jobStatusHandler(uploadRootDir))
 	http.Handle("/download/", downloadMosaicHandler(uploadRootDir))
 
 	http.ListenAndServe(addr, nil)
