@@ -10,7 +10,7 @@ import (
 func TestHomeHandler(t *testing.T) {
 	req, _ := http.NewRequest("GET", "", nil)
 	w := httptest.NewRecorder()
-	homeHandler().ServeHTTP(w, req)
+	homeHandler(w, req)
 	if w.Code != http.StatusOK {
 		t.Errorf("Home page didn't return %v", http.StatusOK)
 	}

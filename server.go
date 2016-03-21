@@ -20,10 +20,12 @@ var (
 
 type Page struct {
 	Title            string
-	SearchResultRows [][]ImageURL
-	Error            error
 	UploadID         string
 	Project          *Project
+	template         string
+	redirectTo       string
+	Error            error
+	httpStatusCode   int
 }
 
 func init() {
@@ -34,71 +36,104 @@ func init() {
 	templates["500.html"] = template.Must(template.ParseFiles("./templates/500.html", "./templates/layout.html"))
 }
 
-func homeHandler() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		context := &Page{Title: "Welcome"}
-		renderTemplate(w, "welcome.html", context)
-	})
+// simplify error handling, see: http://blog.golang.org/error-handling-and-go
+type appHandler func(http.ResponseWriter, *http.Request) (*Page)
+
+func (fn appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	page := fn(w, r)
+
+	if page.Error != nil {
+		log.Println(page.Error)
+		w.WriteHeader(page.httpStatusCode)
+	}
+
+	if page.redirectTo != "" {
+		http.Redirect(w, r, page.redirectTo, http.StatusFound)
+	} else if page.template != "" {
+		err := templates[page.template].ExecuteTemplate(w, "layout", page)
+		if err != nil {
+			log.Printf("error rendering template %s: %s", page.template, err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
 }
 
-func resultsHandler(uploadRootDir string) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		page := &Page{Title: "Mosaic Results"}
+func homeHandler(w http.ResponseWriter, r *http.Request) (page *Page) {
+	return &Page{Title: "Welcome", template: "welcome.html"}
+}
 
-		handleErr := func(err error) {
-			page.Error = err
-			w.WriteHeader(http.StatusBadRequest)
-			renderTemplate(w, "welcome.html", page)
-			return
-		}
+func resultsHandler(uploadRootDir string) appHandler {
+	return func(w http.ResponseWriter, r *http.Request) (page *Page) {
+		page = &Page{Title: "Mosaic Results", template: "welcome.html"}
 
 		parts := SplitPath(r.URL.Path)
 		if len(parts) != 2 {
-			handleErr(errors.New("upload_id_missing"))
+			page.Error = errors.New("upload_id_missing")
+			page.httpStatusCode = http.StatusBadRequest
 			return
 		}
 
 		projectID := parts[1]
 		project, err := ReadProject(uploadRootDir, projectID)
 		if err != nil {
-			handleErr(err)
+			page.Error = err
+			page.httpStatusCode = http.StatusBadRequest
 			return
 		}
 
 		page.Project = project
-		w.WriteHeader(http.StatusOK)
-		renderTemplate(w, "results.html", page)
-	})
+		page.httpStatusCode = http.StatusOK
+		page.template = "results.html"
+		return
+	}
 }
 
-func uploadHandler(uploadRootDir string, imageSource *InstagramClient) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("uploadHandler()...")
+func uploadHandler(uploadRootDir string, imageSource *InstagramClient) appHandler {
+	return func(w http.ResponseWriter, r *http.Request) (page *Page) {
+		log.Printf("uploadHandler...")
 
-		handleErr := func(err error) {
-			context := &Page{Title: "Welcome"}
-			context.Error = err
-			renderTemplate(w, "welcome.html", context)
-		}
+		page = &Page{Title: "Welcome"}
 
-		project, err := createProjectFromRequest(uploadRootDir, r)
+		project, err := NewProject(uploadRootDir)
 		if err != nil {
-			handleErr(err)
+			page.Error = err
+			page.template = "welcome.html"
+			page.httpStatusCode = http.StatusInternalServerError
 			return
 		}
 
+		file, _, err := r.FormFile("file")
+		if err != nil {
+			page.template = "welcome.html"
+
+			if err == http.ErrMissingFile {
+				page.Error = errors.New("no image file selected")
+				page.httpStatusCode = http.StatusBadRequest
+			} else {
+				page.Error = err
+				page.httpStatusCode = http.StatusInternalServerError
+			}
+
+			return
+		}
+		defer file.Close()
+		project.ReceiveUpload(file)
+
 		searchTerm := r.FormValue("search_term")
 		if searchTerm == "" {
-			handleErr(errors.New("enter a search_term"))
+			page.Error = errors.New("enter a search_term")
+			page.template = "welcome.html"
+			page.httpStatusCode = http.StatusBadRequest
 			return
 		}
 
 		project.SetAndSaveStatus(StatusSearching)
 
 		go processMosaic(searchTerm, project, imageSource)
+		page.redirectTo = fmt.Sprintf("/results/%s", filepath.Base(project.ID))
 
-		http.Redirect(w, r, fmt.Sprintf("/results/%s", filepath.Base(project.ID)), http.StatusFound)
-	})
+		return
+	}
 }
 
 // Once we have everything from the user, we can process the search, download & generation offline.
@@ -145,25 +180,6 @@ func processMosaic(searchTerm string, project *Project, imageSource *InstagramCl
 
 	project.SetAndSaveStatus(StatusCompleted)
 	log.Printf("project: %s completed successfully", project.ID)
-}
-
-func createProjectFromRequest(uploadRootDir string, r *http.Request) (*Project, error) {
-	project, err := NewProject(uploadRootDir)
-	if err != nil {
-		return nil, err
-	}
-
-	file, _, err := r.FormFile("file")
-
-	if err != nil {
-		if err == http.ErrMissingFile {
-			err = errors.New("no image file selected")
-		}
-		return nil, err
-	}
-	defer file.Close()
-
-	return project, project.ReceiveUpload(file)
 }
 
 func downloadMosaicHandler(uploadRootDir string) http.Handler {
@@ -224,7 +240,7 @@ func jobStatusHandler(uploadRootDir string) http.Handler {
 func Serve(addr, uploadRootDir string, imageSource *InstagramClient) {
 	log.Printf("start server on: %s\n", addr)
 
-	http.Handle("/", homeHandler())
+	http.Handle("/", appHandler(homeHandler))
 	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("./public"))))
 	http.Handle("/upload", uploadHandler(uploadRootDir, imageSource))
 	http.Handle("/results/", resultsHandler(uploadRootDir))
@@ -234,17 +250,5 @@ func Serve(addr, uploadRootDir string, imageSource *InstagramClient) {
 	err := http.ListenAndServe(addr, nil)
 	if err != nil {
 		log.Printf("error from http:ListenAndServe(): %s", err)
-	}
-}
-
-func renderTemplate(w http.ResponseWriter, templatePath string, page *Page) {
-	if page.Error != nil {
-		log.Println(page.Error)
-	}
-
-	err := templates[templatePath].ExecuteTemplate(w, "layout", page)
-	if err != nil {
-		log.Println(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
