@@ -5,10 +5,10 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"os"
 	"path"
 	"path/filepath"
-	"math/rand"
 	"time"
 )
 
@@ -30,7 +30,6 @@ const (
 func init() {
 	rand.Seed(time.Now().UnixNano())
 }
-
 
 // Project represents a mosaic project- the uploaded file, selected tile images, and resulting mosaic image
 type Project struct {
@@ -151,7 +150,7 @@ func (p *Project) ToFile(urls []ImageURL) error {
 	return nil
 }
 
-func (p *Project) SetAndSaveStatus(status Status) (error) {
+func (p *Project) SetAndSaveStatus(status Status) error {
 	p.Status = status
 	return ioutil.WriteFile(p.statusFilePath(), []byte(p.Status), 0644)
 }

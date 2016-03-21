@@ -1,13 +1,13 @@
 package gochallenge3
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"html/template"
 	"log"
 	"net/http"
 	"path/filepath"
-	"encoding/json"
 )
 
 const (
@@ -146,7 +146,6 @@ func processMosaic(searchTerm string, project *Project, imageSource *InstagramCl
 	project.SetAndSaveStatus(StatusCompleted)
 	log.Printf("project: %s completed successfully", project.ID)
 }
-
 
 func createProjectFromRequest(uploadRootDir string, r *http.Request) (*Project, error) {
 	project, err := NewProject(uploadRootDir)

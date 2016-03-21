@@ -1,10 +1,10 @@
 package gochallenge3
 
 import (
-	"testing"
-	"os"
-	"io/ioutil"
 	"encoding/json"
+	"io/ioutil"
+	"os"
+	"testing"
 )
 
 func TestReadNonExistant(t *testing.T) {
@@ -55,10 +55,9 @@ func TestJSON(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `{"ID":"abc123","Status":"completed"}`  // NB: no "uploadRootDir" (intentionally unexported field)
+	expected := `{"ID":"abc123","Status":"completed"}` // NB: no "uploadRootDir" (intentionally unexported field)
 	actual := string(b)
 	if expected != actual {
 		t.Fatalf("expected: %s, got: %s", expected, actual)
 	}
 }
-
