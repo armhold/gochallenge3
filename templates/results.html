@@ -3,8 +3,32 @@
 
     <h2 class="sub-header">Generated Mosaic</h2>
 
-    <img src="/download/{{.Project.ID}}" class="img-responsive" />
+    <span>Status:
+        <span id="status">waiting...</span>
+    </span>
+
+    <img id="mosaic_img" src="" class="img-responsive" style="display: none;" />
 
 </div>
 
+<script type="application/javascript">
+
+    function doPoll(){
+        $.get('/status/{{.Project.ID}}', function(data) {
+            console.log(data.Status);
+
+            $('#status').text(data.Status);
+
+            if (data.Status === "completed") {
+                console.log("mosaic complete");
+                $('#mosaic_img').attr('src','/download/{{.Project.ID}}').attr('style','display: inherit;');
+            } else {
+                setTimeout(doPoll, 1500);
+            }
+        });
+    }
+
+    doPoll();
+
+</script>
 {{ end }}

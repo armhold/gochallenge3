@@ -95,40 +95,51 @@ func uploadHandler(uploadRootDir string, imageSource *InstagramClient) http.Hand
 		}
 
 		project.SetAndSaveStatus(StatusSearching)
-		imageURLs, err := imageSource.Search(searchTerm, maxInstagramSearchImages)
 
-		// save image URLs to disk so we can use them to render mosaic, if/when the user clicks "generate"
-		project.ToFile(imageURLs)
-
-		project.SetAndSaveStatus(StatusDownloading)
-		filePaths, err := Download(imageURLs, project.ThumbnailsDir())
-		for _, filePath := range filePaths {
-			log.Printf("filePath: %s\n", filePath)
-		}
-
-		if err != nil {
-			handleErr(err)
-			return
-		}
-
-		thumbs, err := project.Thumbnails()
-		if err != nil {
-			handleErr(err)
-			return
-		}
-
-		project.SetAndSaveStatus(StatusGenerating)
-		m := NewMosaic(50, 50, thumbs)
-		err = m.Generate(project.UploadedImageFile(), project.GeneratedMosaicFile(), 10, 10)
-		if err != nil {
-			handleErr(err)
-			return
-		}
-		project.SetAndSaveStatus(StatusCompleted)
+		go processMosaic(searchTerm, project, imageSource)
 
 		http.Redirect(w, r, fmt.Sprintf("/results/%s", filepath.Base(project.ID)), http.StatusFound)
 	})
 }
+
+func processMosaic(searchTerm string, project *Project, imageSource *InstagramClient) {
+	imageURLs, err := imageSource.Search(searchTerm, maxInstagramSearchImages)
+
+	// save image URLs to disk so we can use them to render mosaic, if/when the user clicks "generate"
+	project.ToFile(imageURLs)
+
+	project.SetAndSaveStatus(StatusDownloading)
+	filePaths, err := Download(imageURLs, project.ThumbnailsDir())
+	for _, filePath := range filePaths {
+		log.Printf("filePath: %s\n", filePath)
+	}
+
+	if err != nil {
+		log.Println(err)
+		project.SetAndSaveStatus(StatusError)
+		return
+	}
+
+	thumbs, err := project.Thumbnails()
+	if err != nil {
+		log.Println(err)
+		project.SetAndSaveStatus(StatusError)
+		return
+	}
+
+	project.SetAndSaveStatus(StatusGenerating)
+	m := NewMosaic(50, 50, thumbs)
+	err = m.Generate(project.UploadedImageFile(), project.GeneratedMosaicFile(), 10, 10)
+	if err != nil {
+		log.Println(err)
+		project.SetAndSaveStatus(StatusError)
+		return
+	}
+
+	project.SetAndSaveStatus(StatusCompleted)
+	log.Printf("project: %s completed successfully", project.ID)
+}
+
 
 func createProject(uploadRootDir string, r *http.Request) (*Project, error) {
 	project, err := NewProject(uploadRootDir)
@@ -171,7 +182,6 @@ func downloadMosaicHandler(uploadRootDir string) http.Handler {
 	})
 }
 
-// TODO: serve project as JSON
 func jobStatusHandler(uploadRootDir string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 

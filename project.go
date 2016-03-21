@@ -19,6 +19,7 @@ const (
 	StatusSearching   Status = "searching images"
 	StatusDownloading Status = "downloading images"
 	StatusGenerating  Status = "generating mosaic"
+	StatusError       Status = "error"
 	StatusCompleted   Status = "completed"
 )
 
