@@ -1,9 +1,9 @@
 package gochallenge3
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
-	"fmt"
 )
 
 type ImageURL string
@@ -15,7 +15,6 @@ var (
 func init() {
 	imageExtensionRegexp = regexp.MustCompile(`http.*(\.gif|\.jpg|\.png)\?.*`)
 }
-
 
 func ToRows(rowLen int, imageURLs []ImageURL) [][]ImageURL {
 	i := 0
