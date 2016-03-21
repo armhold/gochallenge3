@@ -1,15 +1,15 @@
 package gochallenge3
 
 import (
-	"crypto/rand"
-	"encoding/base64"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"path"
 	"path/filepath"
-	"io/ioutil"
+	"math/rand"
+	"time"
 )
 
 type Status string
@@ -22,6 +22,15 @@ const (
 	StatusError       Status = "error"
 	StatusCompleted   Status = "completed"
 )
+
+const (
+	idCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+)
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
 
 // Project represents a mosaic project- the uploaded file, selected tile images, and resulting mosaic image
 type Project struct {
@@ -51,14 +60,10 @@ func ReadProject(uploadRootDir, id string) (*Project, error) {
 }
 
 func NewProject(uploadRootDir string) (*Project, error) {
-	id, err := randomString()
-	if err != nil {
-		return nil, fmt.Errorf("error generating project ID: %v", err)
-	}
-
+	id := randomString()
 	var result = &Project{ID: id, uploadRootDir: uploadRootDir}
 
-	err = os.Mkdir(result.UploadedImageDir(), os.ModeDir|os.ModePerm)
+	err := os.Mkdir(result.UploadedImageDir(), os.ModeDir|os.ModePerm)
 	if err != nil {
 		return nil, fmt.Errorf("error creating upload dir: %v", result.UploadedImageDir())
 	}
@@ -118,15 +123,13 @@ func (p *Project) Thumbnails() ([]string, error) {
 	return filepath.Glob(p.ThumbnailsDir() + "/thumb*")
 }
 
-func randomString() (string, error) {
-	rb := make([]byte, 8)
-	_, err := rand.Read(rb)
-
-	if err != nil {
-		return "", err
+// adapted from http://stackoverflow.com/questions/22892120/how-to-generate-a-random-string-of-a-fixed-length-in-golang
+func randomString() string {
+	b := make([]byte, 5)
+	for i := range b {
+		b[i] = idCharacters[rand.Intn(len(idCharacters))]
 	}
-
-	return base64.URLEncoding.EncodeToString(rb), nil
+	return string(b)
 }
 
 func (p *Project) ToFile(urls []ImageURL) error {

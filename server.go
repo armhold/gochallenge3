@@ -32,7 +32,6 @@ func init() {
 	templates["results.html"] = template.Must(template.ParseFiles("./templates/results.html", "./templates/layout.html"))
 	templates["404.html"] = template.Must(template.ParseFiles("./templates/404.html", "./templates/layout.html"))
 	templates["500.html"] = template.Must(template.ParseFiles("./templates/500.html", "./templates/layout.html"))
-	//	template.ParseGlob("./templates/*.html")
 }
 
 func homeHandler() http.Handler {
@@ -82,7 +81,7 @@ func uploadHandler(uploadRootDir string, imageSource *InstagramClient) http.Hand
 			renderTemplate(w, "welcome.html", context)
 		}
 
-		project, err := createProject(uploadRootDir, r)
+		project, err := createProjectFromRequest(uploadRootDir, r)
 		if err != nil {
 			handleErr(err)
 			return
@@ -102,18 +101,26 @@ func uploadHandler(uploadRootDir string, imageSource *InstagramClient) http.Hand
 	})
 }
 
+// Once we have everything from the user, we can process the search, download & generation offline.
+// This is intended to be run from a goroutine; we report success/error via project status.
 func processMosaic(searchTerm string, project *Project, imageSource *InstagramClient) {
 	imageURLs, err := imageSource.Search(searchTerm, maxInstagramSearchImages)
-
-	// save image URLs to disk so we can use them to render mosaic, if/when the user clicks "generate"
-	project.ToFile(imageURLs)
-
-	project.SetAndSaveStatus(StatusDownloading)
-	filePaths, err := Download(imageURLs, project.ThumbnailsDir())
-	for _, filePath := range filePaths {
-		log.Printf("filePath: %s\n", filePath)
+	if err != nil {
+		log.Println(err)
+		project.SetAndSaveStatus(StatusError)
+		return
 	}
 
+	// save image URLs to disk so we can use them to render mosaic, if/when the user clicks "generate"
+	err = project.ToFile(imageURLs)
+	if err != nil {
+		log.Println(err)
+		project.SetAndSaveStatus(StatusError)
+		return
+	}
+
+	project.SetAndSaveStatus(StatusDownloading)
+	_, err = Download(imageURLs, project.ThumbnailsDir())
 	if err != nil {
 		log.Println(err)
 		project.SetAndSaveStatus(StatusError)
@@ -141,7 +148,7 @@ func processMosaic(searchTerm string, project *Project, imageSource *InstagramCl
 }
 
 
-func createProject(uploadRootDir string, r *http.Request) (*Project, error) {
+func createProjectFromRequest(uploadRootDir string, r *http.Request) (*Project, error) {
 	project, err := NewProject(uploadRootDir)
 	if err != nil {
 		return nil, err
@@ -225,7 +232,10 @@ func Serve(addr, uploadRootDir string, imageSource *InstagramClient) {
 	http.Handle("/status/", jobStatusHandler(uploadRootDir))
 	http.Handle("/download/", downloadMosaicHandler(uploadRootDir))
 
-	http.ListenAndServe(addr, nil)
+	err := http.ListenAndServe(addr, nil)
+	if err != nil {
+		log.Printf("error from http:ListenAndServe(): %s", err)
+	}
 }
 
 func renderTemplate(w http.ResponseWriter, templatePath string, page *Page) {
