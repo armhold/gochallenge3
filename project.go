@@ -1,7 +1,6 @@
 package gochallenge3
 
 import (
-	"bufio"
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
@@ -10,16 +9,32 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"io/ioutil"
+)
+
+type Status string
+
+const (
+	StatusNew         Status = "new"
+	StatusSearching   Status = "searching images"
+	StatusDownloading Status = "downloading images"
+	StatusGenerating  Status = "generating mosaic"
+	StatusCompleted   Status = "completed"
 )
 
 // Project represents a mosaic project- the uploaded file, selected tile images, and resulting mosaic image
 type Project struct {
 	ID            string
 	uploadRootDir string
+	Status
 }
 
 func ReadProject(uploadRootDir, id string) (*Project, error) {
 	var result = &Project{ID: id, uploadRootDir: uploadRootDir}
+	err := result.LoadStatus()
+	if err != nil {
+		return nil, err
+	}
 
 	// check if the image dir exists
 	fileInfo, err := os.Stat(result.UploadedImageDir())
@@ -51,6 +66,8 @@ func NewProject(uploadRootDir string) (*Project, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error creating thumbnails dir: %v", result.ThumbnailsDir())
 	}
+
+	result.SetAndSaveStatus(StatusNew)
 
 	return result, nil
 }
@@ -130,19 +147,21 @@ func (p *Project) ToFile(urls []ImageURL) error {
 	return nil
 }
 
-func (p *Project) FromFile() ([]string, error) {
-	file, err := os.Open(p.ImageUrlsFile())
+func (p *Project) SetAndSaveStatus(status Status) (error) {
+	p.Status = status
+	return ioutil.WriteFile(p.statusFilePath(), []byte(p.Status), 0644)
+}
+
+func (p *Project) LoadStatus() error {
+	s, err := ioutil.ReadFile(p.statusFilePath())
 	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	var result []string
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		url := scanner.Text()
-		result = append(result, url)
+		return err
 	}
 
-	return result, scanner.Err()
+	p.Status = Status(s)
+	return nil
+}
+
+func (p *Project) statusFilePath() string {
+	return path.Join(p.UploadedImageDir(), "status")
 }

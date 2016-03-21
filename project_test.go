@@ -1,8 +1,9 @@
 package gochallenge3
 
 import (
-	"fmt"
 	"testing"
+	"os"
+	"io/ioutil"
 )
 
 func TestReadNonExistant(t *testing.T) {
@@ -13,30 +14,35 @@ func TestReadNonExistant(t *testing.T) {
 	}
 }
 
-func TestSerialize(t *testing.T) {
-	imageURLs := make([]ImageURL, 5)
-
-	for i, _ := range imageURLs {
-		imageURLs[i] = ImageURL(fmt.Sprintf("http://example.com/foo%d", i))
+func TestSetLoadStatus(t *testing.T) {
+	uploadRootDir, err := ioutil.TempDir("", "project_test")
+	if err != nil {
+		t.Fatal(err)
 	}
+	defer os.RemoveAll(uploadRootDir)
 
-	project, _ := NewProject("/tmp")
-
-	project.ToFile(imageURLs)
-
-	urlsFromFile, err := project.FromFile()
+	p, err := NewProject(uploadRootDir)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if len(urlsFromFile) != 5 {
-		t.Errorf("expected 5 urls, got %d", len(urlsFromFile))
+	// re-read it- status should be "new"
+	p, err = ReadProject(uploadRootDir, p.ID)
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	for i, url := range urlsFromFile {
-		expected := fmt.Sprintf("http://example.com/foo%d", i)
-		if string(url) != expected {
-			t.Errorf("expected %s, got %s", expected, url)
-		}
+	if p.Status != StatusNew {
+		t.Fatalf("expected %s, got %s", StatusNew, p.Status)
+	}
+
+	p.SetAndSaveStatus(StatusCompleted)
+	p, err = ReadProject(uploadRootDir, p.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if p.Status != StatusCompleted {
+		t.Fatalf("expected %s, got %s", StatusCompleted, p.Status)
 	}
 }
