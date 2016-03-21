@@ -3,9 +3,23 @@
 
     <h2 class="sub-header">Generated Mosaic</h2>
 
-    <span>Status:
-        <span id="status">waiting...</span>
-    </span>
+    <div class="row">
+        <div class="col-sm-6 col-md-6">
+                <h4>Status:
+                    <span id="status">waiting...</span>
+                </h4>
+            </div>
+        </div>
+
+    <div class="row">
+        <div class="col-sm-6 col-md-6">
+            <div id="progress_bar" class="progress progress-striped active">
+                <div class="progress-bar" style="width: 100%;">
+                    <span class="sr-only"></span>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <img id="mosaic_img" src="" class="img-responsive" style="display: none;" />
 
@@ -21,7 +35,8 @@
 
             if (data.Status === "completed") {
                 console.log("mosaic complete");
-                $('#mosaic_img').attr('src','/download/{{.Project.ID}}').attr('style','display: inherit;');
+                $('#mosaic_img').attr('src','/download/{{.Project.ID}}').show();
+                $('#progress_bar').hide()
             } else {
                 setTimeout(doPoll, 1500);
             }
