@@ -4,6 +4,7 @@ import (
 	"testing"
 	"os"
 	"io/ioutil"
+	"encoding/json"
 )
 
 func TestReadNonExistant(t *testing.T) {
@@ -46,3 +47,18 @@ func TestSetLoadStatus(t *testing.T) {
 		t.Fatalf("expected %s, got %s", StatusCompleted, p.Status)
 	}
 }
+
+func TestJSON(t *testing.T) {
+	p := Project{ID: "abc123", Status: StatusCompleted}
+	b, err := json.Marshal(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `{"ID":"abc123","Status":"completed"}`  // NB: no "uploadRootDir" (intentionally unexported field)
+	actual := string(b)
+	if expected != actual {
+		t.Fatalf("expected: %s, got: %s", expected, actual)
+	}
+}
+

@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+	"encoding/json"
 )
 
 const (
@@ -93,11 +94,13 @@ func uploadHandler(uploadRootDir string, imageSource *InstagramClient) http.Hand
 			return
 		}
 
+		project.SetAndSaveStatus(StatusSearching)
 		imageURLs, err := imageSource.Search(searchTerm, maxInstagramSearchImages)
 
 		// save image URLs to disk so we can use them to render mosaic, if/when the user clicks "generate"
 		project.ToFile(imageURLs)
 
+		project.SetAndSaveStatus(StatusDownloading)
 		filePaths, err := Download(imageURLs, project.ThumbnailsDir())
 		for _, filePath := range filePaths {
 			log.Printf("filePath: %s\n", filePath)
@@ -114,12 +117,14 @@ func uploadHandler(uploadRootDir string, imageSource *InstagramClient) http.Hand
 			return
 		}
 
+		project.SetAndSaveStatus(StatusGenerating)
 		m := NewMosaic(50, 50, thumbs)
 		err = m.Generate(project.UploadedImageFile(), project.GeneratedMosaicFile(), 10, 10)
 		if err != nil {
 			handleErr(err)
 			return
 		}
+		project.SetAndSaveStatus(StatusCompleted)
 
 		http.Redirect(w, r, fmt.Sprintf("/results/%s", filepath.Base(project.ID)), http.StatusFound)
 	})
@@ -166,9 +171,10 @@ func downloadMosaicHandler(uploadRootDir string) http.Handler {
 	})
 }
 
-// TODO
+// TODO: serve project as JSON
 func jobStatusHandler(uploadRootDir string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
 		parts := SplitPath(r.URL.Path)
 		if len(parts) != 2 {
 			err := "upload_id missing"
@@ -185,7 +191,17 @@ func jobStatusHandler(uploadRootDir string) http.Handler {
 			return
 		}
 
-		log.Printf("jobStatus: %s: %s", project.ID, project.Status)
+		w.Header().Set("Content-Type", "application/json")
+		json, err := json.Marshal(project)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		jsonString := string(json)
+		fmt.Fprint(w, jsonString)
+		log.Printf("jobStatus: %s:", jsonString)
 	})
 }
 
