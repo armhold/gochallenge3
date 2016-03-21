@@ -7,6 +7,12 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"regexp"
+)
+
+var (
+        // disallow "..", "/" and " " strings to appear in the search term
+	prohibited = regexp.MustCompile(`\.\.|/|\s+`)
 )
 
 // simple client for the Instagram Search API
@@ -81,7 +87,12 @@ func (i *InstagramClient) searchPaginated(instagramURL string) (imageURLs []Imag
 }
 
 func (i *InstagramClient) instagramAPIUrl(searchTag string) (string, error) {
-	u, err := url.Parse(fmt.Sprintf("https://api.instagram.com/v1/tags/%s/media/recent", url.QueryEscape(searchTag)))
+
+	// NB: can't convert spaces to "+" or "%20"; the API just flat out rejects them,
+	// as well as %2F for slashes, etc.
+	cleanedTag := prohibited.ReplaceAllString(searchTag, "")
+
+	u, err := url.Parse(fmt.Sprintf("https://api.instagram.com/v1/tags/%s/media/recent", cleanedTag))
 	if err != nil {
 		return "", err
 	}
