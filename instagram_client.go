@@ -81,18 +81,11 @@ func (i *InstagramClient) searchPaginated(instagramURL string) (imageURLs []Imag
 }
 
 func (i *InstagramClient) instagramAPIUrl(searchTag string) (string, error) {
-	searchTag, err := UrlEncode(searchTag)
+	u, err := url.Parse(fmt.Sprintf("https://api.instagram.com/v1/tags/%s/media/recent", url.QueryEscape(searchTag)))
 	if err != nil {
 		return "", err
 	}
 
-	u, err := url.Parse("https://api.instagram.com/v1/tags")
-	if err != nil {
-		return "", err
-	}
-
-	u.Path += "/" + searchTag
-	u.Path += "/media/recent"
 	parameters := url.Values{}
 	parameters.Add("client_id", i.ClientID)
 	parameters.Add("count", "50")
