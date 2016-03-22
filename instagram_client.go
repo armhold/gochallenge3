@@ -11,7 +11,7 @@ import (
 )
 
 var (
-        // disallow "..", "/" and " " strings to appear in the search term
+	// disallow "..", "/" and " " strings to appear in the search term
 	prohibited = regexp.MustCompile(`\.\.|/|\s+`)
 )
 

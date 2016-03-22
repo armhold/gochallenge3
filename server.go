@@ -19,13 +19,13 @@ var (
 )
 
 type Page struct {
-	Title            string
-	UploadID         string
-	Project          *Project
-	template         string
-	redirectTo       string
-	Error            error
-	httpStatusCode   int
+	Title          string
+	UploadID       string
+	Project        *Project
+	template       string
+	redirectTo     string
+	Error          error
+	httpStatusCode int
 }
 
 func init() {
@@ -37,7 +37,7 @@ func init() {
 }
 
 // simplify error handling, see: http://blog.golang.org/error-handling-and-go
-type appHandler func(http.ResponseWriter, *http.Request) (*Page)
+type appHandler func(http.ResponseWriter, *http.Request) *Page
 
 func (fn appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	page := fn(w, r)

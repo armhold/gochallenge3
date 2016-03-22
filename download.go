@@ -63,7 +63,6 @@ func Download(urls []ImageURL, downloadDir string, maxConcurrency int) ([]string
 
 	log.Printf("all download workers complete")
 
-
 	// check to see if any workers had an error.
 	// NB: this is necessary since errC is non-buffered, and workers will be blocked trying to write to it.
 	var err error
