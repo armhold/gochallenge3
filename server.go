@@ -155,7 +155,7 @@ func processMosaic(searchTerm string, project *Project, imageSource *InstagramCl
 	}
 
 	project.SetAndSaveStatus(StatusDownloading)
-	_, err = Download(imageURLs, project.ThumbnailsDir())
+	_, err = Download(imageURLs, project.ThumbnailsDir(), 10)
 	if err != nil {
 		log.Println(err)
 		project.SetAndSaveStatus(StatusError)

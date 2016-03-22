@@ -4,6 +4,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/armhold/gochallenge3"
@@ -45,9 +46,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	savedFiles, err := gochallenge3.Download(urls, imagesDir)
-	for _, filepath := range savedFiles {
-		fmt.Printf("saved to: %s\n", filepath)
-	}
+	savedFiles, err := gochallenge3.Download(urls, imagesDir, downloadConcurrency)
 
+	if err != nil {
+		log.Println(err)
+	} else {
+		for _, filepath := range savedFiles {
+			fmt.Printf("saved to: %s\n", filepath)
+		}
+	}
 }
