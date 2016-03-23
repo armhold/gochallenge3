@@ -1,3 +1,5 @@
+// App is a web server that allows users to upload images and turn them into mosaics.
+// It uses the Instagram tag API to search for thumbnail images to form the mosaic.
 package main
 
 import (
@@ -47,7 +49,7 @@ func main() {
 		log.Fatal("environment variable INSTAGRAM_CLIENT_ID not set")
 	}
 
-	imageSource := &gochallenge3.InstagramClient{instagramClientID}
+	imageSource := &gochallenge3.InstagramClient{ClientID: instagramClientID}
 
 	gochallenge3.Serve(addr, uploadRootDir, imageSource)
 }

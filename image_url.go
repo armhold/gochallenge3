@@ -9,12 +9,8 @@ import (
 type ImageURL string
 
 var (
-	imageExtensionRegexp *regexp.Regexp
-)
-
-func init() {
 	imageExtensionRegexp = regexp.MustCompile(`http.*(\.gif|\.jpg|\.png)\?.*`)
-}
+)
 
 func ToRows(rowLen int, imageURLs []ImageURL) [][]ImageURL {
 	i := 0

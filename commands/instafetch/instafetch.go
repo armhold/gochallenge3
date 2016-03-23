@@ -39,7 +39,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	client := &gochallenge3.InstagramClient{clientID}
+	client := &gochallenge3.InstagramClient{ClientID: clientID}
 	urls, err := client.Search(tag, maxResults)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
