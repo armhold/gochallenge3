@@ -5,3 +5,6 @@ This is my entry for the Go Challenge 3 contest:
 - create a program that creates mosaics (images pieced together from many smaller images)
 - create program for searching an image database (Instagram)
 - combine them to produce a webapp
+
+
+![logo](https://github.com/armhold/gochallenge3/blob/master/logo.png "gochallenge3 Logo")
