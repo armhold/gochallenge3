@@ -7,4 +7,4 @@ This is my entry for the Go Challenge 3 contest:
 - combine them to produce a webapp
 
 
-![logo](https://github.com/armhold/gochallenge3/blob/master/logo.png "gochallenge3 Logo")
+![logo](https://github.com/armhold/gosaic/blob/master/logo.png "gosaic Logo")

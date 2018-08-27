@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/armhold/gochallenge3"
+	"github.com/armhold/gosaic"
 )
 
 var (
@@ -39,7 +39,7 @@ func init() {
 
 func main() {
 	sourceFiles := getImageFiles(imagesDir)
-	mosaic := gochallenge3.NewMosaic(tileWidth, tileHeight, sourceFiles)
+	mosaic := gosaic.NewMosaic(tileWidth, tileHeight, sourceFiles)
 	err := mosaic.Generate(sourceImage, outFile, widthMult, heightMult)
 	if err != nil {
 		fmt.Fprint(os.Stderr, err)

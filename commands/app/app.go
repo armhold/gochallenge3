@@ -4,7 +4,7 @@ package main
 
 import (
 	"flag"
-	"github.com/armhold/gochallenge3"
+	"github.com/armhold/gosaic"
 	"log"
 	"os"
 )
@@ -49,7 +49,7 @@ func main() {
 		log.Fatal("environment variable INSTAGRAM_CLIENT_ID not set")
 	}
 
-	imageSource := &gochallenge3.InstagramClient{ClientID: instagramClientID}
+	imageSource := &gosaic.InstagramClient{ClientID: instagramClientID}
 
-	gochallenge3.Serve(addr, uploadRootDir, imageSource)
+	gosaic.Serve(addr, uploadRootDir, imageSource)
 }

@@ -7,7 +7,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/armhold/gochallenge3"
+	"github.com/armhold/gosaic"
 )
 
 var (
@@ -39,14 +39,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	client := &gochallenge3.InstagramClient{ClientID: clientID}
+	client := &gosaic.InstagramClient{ClientID: clientID}
 	urls, err := client.Search(tag, maxResults)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 
-	savedFiles, err := gochallenge3.Download(urls, imagesDir, downloadConcurrency)
+	savedFiles, err := gosaic.Download(urls, imagesDir, downloadConcurrency)
 
 	if err != nil {
 		log.Println(err)

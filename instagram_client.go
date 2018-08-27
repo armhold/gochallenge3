@@ -1,4 +1,4 @@
-package gochallenge3
+package gosaic
 
 import (
 	"errors"
